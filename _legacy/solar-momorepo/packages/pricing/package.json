@@ -1,0 +1,44 @@
+{
+  "name": "@solar/pricing",
+  "version": "0.1.0",
+  "description": "Price estimation for SolarHousePrice - Aggregation & ML",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "lint": "eslint src --ext .ts",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@solar/db": "workspace:*",
+    "@solar/config": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.2.0"
+  },
+  "peerDependencies": {
+    "@prisma/client": "^5.0.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src/ml/model.json"
+  ],
+  "keywords": [
+    "pricing",
+    "real-estate",
+    "ml",
+    "estimation"
+  ],
+  "author": "Solarpaletten",
+  "license": "MIT"
+}

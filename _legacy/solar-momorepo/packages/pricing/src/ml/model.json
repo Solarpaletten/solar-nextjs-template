@@ -1,0 +1,30 @@
+{
+  "type": "gradient_boosting",
+  "n_estimators": 1,
+  "feature_names": [
+    "area_sqm",
+    "building_levels",
+    "type_residential",
+    "type_apartments",
+    "type_commercial",
+    "type_office",
+    "type_industrial",
+    "centroid_lat",
+    "centroid_lng",
+    "distance_to_center_km",
+    "aggregated_price_sqm",
+    "nearby_listings_count"
+  ],
+  "learning_rate": 0.1,
+  "initial_prediction": 6500,
+  "trees": [
+    {
+      "feature": [10, -2, -2],
+      "threshold": [6500.0, 0.0, 0.0],
+      "children_left": [1, -1, -1],
+      "children_right": [2, -1, -1],
+      "value": [0.0, -200.0, 200.0]
+    }
+  ],
+  "_comment": "Placeholder model. Run train.py to generate real model."
+}

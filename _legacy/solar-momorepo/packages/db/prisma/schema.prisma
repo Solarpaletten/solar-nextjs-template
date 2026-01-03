@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model House {
+  id             String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  osmId          BigInt?         @map("osm_id")
+  geometry       Unsupported("geometry(Polygon, 4326)")?
+  centroid       Unsupported("geometry(Point, 4326)")?
+  addressStreet  String?         @map("address_street") @db.VarChar(255)
+  addressNumber  String?         @map("address_number") @db.VarChar(50)
+  addressCity    String?         @map("address_city") @db.VarChar(100)
+  addressPostcode String?        @map("address_postcode") @db.VarChar(20)
+  buildingType   String?         @map("building_type") @db.VarChar(50)
+  buildingLevels Int?            @map("building_levels") @db.SmallInt
+  areaSqm        Decimal?        @map("area_sqm") @db.Decimal(10, 2)
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  
+  priceEstimates PriceEstimate[]
+  listings       LightListing[]
+
+  @@map("houses")
+}
+
+model PriceEstimate {
+  id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  houseId      String   @unique @map("house_id") @db.Uuid
+  
+  priceSqm     Decimal  @map("price_sqm") @db.Decimal(10, 2)
+  priceTotal   Decimal? @map("price_total") @db.Decimal(12, 2)
+  method       String   @db.VarChar(20)
+  confidence   Decimal  @db.Decimal(3, 2)
+  details      Json     @default("{}")
+  
+  calculatedAt DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz
+
+  house House @relation(fields: [houseId], references: [id], onDelete: Cascade)
+
+  @@index([houseId])
+  @@index([calculatedAt])
+  @@map("price_estimates")
+}
+
+model LightListing {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  houseId      String?   @map("house_id") @db.Uuid
+  listingType  String    @map("listing_type") @db.VarChar(20)
+  price        Decimal   @db.Decimal(12, 2)
+  areaSqm      Decimal?  @map("area_sqm") @db.Decimal(10, 2)
+  geometry     Unsupported("geometry(Point, 4326)")?
+  contactEmail String    @map("contact_email") @db.VarChar(255)
+  contactPhone String?   @map("contact_phone") @db.VarChar(50)
+  description  String?
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  expiresAt    DateTime? @map("expires_at") @db.Timestamptz
+
+  house House? @relation(fields: [houseId], references: [id], onDelete: SetNull)
+
+  @@index([houseId])
+  @@index([isActive])
+  @@index([listingType])
+  @@map("light_listings")
+}
+
+model PriceCoefficient {
+  id                String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  district          String    @db.VarChar(100)
+  basePriceSqm      Decimal   @map("base_price_sqm") @db.Decimal(10, 2)
+  factorResidential Decimal   @default(1.0) @map("factor_residential") @db.Decimal(4, 3)
+  factorApartments  Decimal   @default(1.05) @map("factor_apartments") @db.Decimal(4, 3)
+  factorCommercial  Decimal   @default(1.2) @map("factor_commercial") @db.Decimal(4, 3)
+  factorOffice      Decimal   @default(1.15) @map("factor_office") @db.Decimal(4, 3)
+  factorIndustrial  Decimal   @default(0.7) @map("factor_industrial") @db.Decimal(4, 3)
+  factorPerLevel    Decimal   @default(0.02) @map("factor_per_level") @db.Decimal(4, 3)
+  factorCenterKm    Decimal   @default(-0.03) @map("factor_center_km") @db.Decimal(4, 3)
+  factorWater100m   Decimal   @default(0.08) @map("factor_water_100m") @db.Decimal(4, 3)
+  version           Int       @default(1)
+  validFrom         DateTime  @default(now()) @map("valid_from") @db.Timestamptz
+  validTo           DateTime? @map("valid_to") @db.Timestamptz
+  source            String    @db.VarChar(100)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([district, validFrom])
+  @@map("price_coefficients")
+}

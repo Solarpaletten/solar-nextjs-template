@@ -1,0 +1,65 @@
+// ============================================================
+// PRISMA SCHEMA ADDITION - PHASE 6
+// Add this to packages/db/prisma/schema.prisma
+// ============================================================
+
+// MODIFY the existing House model - ADD these lines:
+
+/*
+model House {
+  id              String    @id @default(uuid())
+  region          String    @default("berlin-alexanderplatz")  // ← ADD THIS LINE
+  osm_id          BigInt?   @unique
+  building_type   String
+  building_levels Int?
+  area_sqm        Decimal?  @db.Decimal(10, 2)
+  geometry        Unsupported("geometry(Polygon, 4326)")
+  
+  address_street  String?
+  address_number  String?
+  address_city    String?
+  address_postcode String?
+  
+  roof_shape      String?
+  roof_material   String?
+  building_material String?
+  year_built      Int?
+  
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  priceEstimate   PriceEstimate?
+
+  @@index([region])           // ← ADD THIS INDEX
+  @@index([building_type])
+}
+*/
+
+// ============================================================
+// MIGRATION SQL (run after schema update)
+// ============================================================
+
+/*
+-- Add region column with default value
+ALTER TABLE houses ADD COLUMN IF NOT EXISTS region VARCHAR(50) DEFAULT 'berlin-alexanderplatz';
+
+-- Update existing records
+UPDATE houses SET region = 'berlin-alexanderplatz' WHERE region IS NULL;
+
+-- Create index
+CREATE INDEX IF NOT EXISTS houses_region_idx ON houses(region);
+*/
+
+// ============================================================
+// MIGRATION COMMAND
+// ============================================================
+
+/*
+After updating schema.prisma, run:
+
+cd packages/db
+pnpm prisma migrate dev --name add_region_to_houses
+
+Or for production:
+pnpm prisma migrate deploy
+*/
