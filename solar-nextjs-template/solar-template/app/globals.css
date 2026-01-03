@@ -1,0 +1,134 @@
+/* ===========================================
+   GLOBAL STYLES
+   Solar Template - app/globals.css
+   =========================================== */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===========================================
+   MAPBOX STYLES
+   =========================================== */
+
+@import 'mapbox-gl/dist/mapbox-gl.css';
+
+/* ===========================================
+   BASE STYLES
+   =========================================== */
+
+@layer base {
+  :root {
+    --font-inter: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply text-gray-900;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ===========================================
+   COMPONENT STYLES
+   =========================================== */
+
+@layer components {
+  /* Map container */
+  .map-container {
+    @apply w-full h-full relative;
+  }
+  
+  /* Cluster marker */
+  .cluster-marker {
+    @apply cursor-pointer;
+    transition: transform 0.2s ease;
+  }
+  
+  .cluster-marker:hover {
+    transform: scale(1.1);
+  }
+  
+  /* Point marker */
+  .point-marker {
+    @apply cursor-pointer;
+    transition: transform 0.2s ease;
+  }
+  
+  .point-marker:hover {
+    transform: scale(1.25);
+    z-index: 10;
+  }
+}
+
+/* ===========================================
+   UTILITY STYLES
+   =========================================== */
+
+@layer utilities {
+  /* Hide scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Glass effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-md;
+  }
+}
+
+/* ===========================================
+   MAPBOX OVERRIDES
+   =========================================== */
+
+.mapboxgl-popup-content {
+  @apply rounded-lg shadow-xl p-0 overflow-hidden;
+}
+
+.mapboxgl-popup-close-button {
+  @apply text-gray-400 hover:text-gray-600 text-xl p-2;
+}
+
+.mapboxgl-ctrl-logo {
+  @apply opacity-50;
+}
+
+/* ===========================================
+   ANIMATIONS
+   =========================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}

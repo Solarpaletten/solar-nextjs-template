@@ -1,0 +1,93 @@
+// ===========================================
+// PRISMA SCHEMA
+// Solar Template - prisma/schema.prisma
+// ===========================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+// ===========================================
+// MODELS
+// ===========================================
+
+/// Building/house from OpenStreetMap
+model House {
+  id           String   @id @default(uuid())
+  osmId        String?  @map("osm_id")
+  buildingType String?  @map("building_type")
+  areaSqm      Float?   @map("area_sqm")
+  floors       Int?
+  
+  // PostGIS geometry (stored as raw, queried via SQL)
+  // centroid: GEOMETRY(Point, 4326)
+  // footprint: GEOMETRY(Polygon, 4326)
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  priceEstimate PriceEstimate?
+  
+  @@map("houses")
+}
+
+/// Price estimate for a house
+model PriceEstimate {
+  id         String   @id @default(uuid())
+  houseId    String   @unique @map("house_id")
+  house      House    @relation(fields: [houseId], references: [id])
+  
+  price      Float
+  priceSqm   Float    @map("price_sqm")
+  segment    String   // 'low' | 'mid' | 'upper' | 'premium'
+  confidence String   // 'low' | 'medium' | 'high'
+  
+  factors    Json?    // Array of price factors
+  
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  
+  @@map("price_estimates")
+}
+
+/// Real estate listing (future)
+model Listing {
+  id           String   @id @default(uuid())
+  
+  // Type
+  listingType  String   @map("listing_type")  // 'sale' | 'rent'
+  propertyType String   @map("property_type") // 'apartment' | 'house'
+  
+  // Price
+  price        Float
+  priceSqm     Float?   @map("price_sqm")
+  segment      String?
+  
+  // Details
+  areaSqm      Float?   @map("area_sqm")
+  rooms        Float?
+  
+  // Location (stored via PostGIS)
+  address      String?
+  city         String?
+  canton       String?
+  
+  // Source
+  source       String?  // 'demo' | 'homegate' | etc
+  externalId   String?  @map("external_id")
+  
+  // Timestamps
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  expiresAt    DateTime? @map("expires_at")
+  
+  @@map("listings")
+}
