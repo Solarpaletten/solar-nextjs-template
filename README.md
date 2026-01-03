@@ -265,3 +265,8 @@ MIT
 **Built with ❤️ for Swiss Real Estate Market**
 
 *Solar Template v1 — January 2026*
+
+## Solar Rule
+
+All Solar projects MUST start from this template.
+Legacy repositories are reference-only and must not be used as a base.
