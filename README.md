@@ -484,3 +484,5 @@ Dashka: "GO → GitHub"
 ### ✅ ГОТОВО
 
 Скажи — идём дальше 🚀
+
+git commit -m "app/api/house/[id]/.gitkeep"   
