@@ -85,7 +85,7 @@ solar-template/
 ### 1. Клонировать шаблон
 
 ```bash
-git clone https://github.com/your/solar-template.git my-project
+git clone https://github.com/Solarpaletten/solar-nextjs-template my-project
 cd my-project
 ```
 
