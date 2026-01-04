@@ -145,7 +145,7 @@ async function cacheEstimate(houseId: string, estimate: PriceEstimate): Promise<
         expiresAt,
       },
     });
-  });
+    
 } catch {
   console.warn('Could not cache price estimate');
 }
