@@ -390,7 +390,7 @@ prisma:query
     
  GET /api/clusters?bbox=6.733818450684083,46.197873174636385,7.191811936093615,46.37593285029797&zoom=12 200 in 84ms
 
-God Job Command SOLAR!!!
+Good Job Command SOLAR!!!
 
 
 
