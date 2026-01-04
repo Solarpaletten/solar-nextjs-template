@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { PRICE_SEGMENTS, type PriceSegment } from '@/lib/segmentation';
+export const dynamic = 'force-dynamic';
 
 // ===========================================
 // HANDLER

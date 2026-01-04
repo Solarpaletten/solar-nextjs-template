@@ -13,6 +13,7 @@ import {
   getClusters,
   type ClusterPoint,
 } from '@/lib/clustering';
+export const dynamic = 'force-dynamic';
 
 // ===========================================
 // HANDLER

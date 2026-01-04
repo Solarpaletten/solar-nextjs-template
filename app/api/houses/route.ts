@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { parseBbox } from '@/lib/geo';
 import { API_DEFAULT_LIMIT, API_MAX_LIMIT } from '@/config/constants';
+export const dynamic = 'force-dynamic';
 
 // ===========================================
 // GET /api/houses
