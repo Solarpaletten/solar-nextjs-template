@@ -1,0 +1,13 @@
+# ============================================================
+# ROBOTS.TXT
+# Solar Template - SEO Configuration
+# ============================================================
+
+User-agent: *
+Allow: /
+
+# Disallow API routes from indexing
+Disallow: /api/
+
+# Sitemap (uncomment when available)
+# Sitemap: https://your-domain.com/sitemap.xml

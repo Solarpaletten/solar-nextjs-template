@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0f172a"/>
+  
+  <!-- Grid pattern -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  
+  <!-- Sun icon -->
+  <g transform="translate(100, 215)">
+    <circle cx="100" cy="100" r="60" fill="#f97316"/>
+    <g stroke="#f97316" stroke-width="8" stroke-linecap="round">
+      <line x1="100" y1="10" x2="100" y2="30"/>
+      <line x1="100" y1="170" x2="100" y2="190"/>
+      <line x1="10" y1="100" x2="30" y2="100"/>
+      <line x1="170" y1="100" x2="190" y2="100"/>
+      <line x1="36" y1="36" x2="50" y2="50"/>
+      <line x1="150" y1="150" x2="164" y2="164"/>
+      <line x1="36" y1="164" x2="50" y2="150"/>
+      <line x1="150" y1="50" x2="164" y2="36"/>
+    </g>
+  </g>
+  
+  <!-- Text -->
+  <text x="350" y="280" font-family="system-ui, sans-serif" font-size="72" font-weight="700" fill="white">
+    Solar House Price
+  </text>
+  <text x="350" y="350" font-family="system-ui, sans-serif" font-size="32" fill="#94a3b8">
+    Real Estate Visualization Platform
+  </text>
+  
+  <!-- Features -->
+  <g font-family="system-ui, sans-serif" font-size="24" fill="#64748b">
+    <text x="350" y="450">🗺️ 3D Satellite Maps</text>
+    <text x="650" y="450">💰 Price Estimates</text>
+    <text x="950" y="450">📊 Market Analysis</text>
+  </g>
+  
+  <!-- Bottom bar -->
+  <rect x="0" y="590" width="1200" height="40" fill="#f97316"/>
+</svg>
