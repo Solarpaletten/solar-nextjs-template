@@ -1,5 +1,5 @@
 
-D=>C task5.2 отправлен Посмотри GITKEEP*.md и приступай. подключись через project_knowledge_search GitHub https://github.com/Solarpaletten/solar-nextjs-template 
+D=>C task6 отправлен Посмотри GITKEEP*.md и приступай. подключись через project_knowledge_search GitHub https://github.com/Solarpaletten/solar-nextjs-template 
 
 leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % pnpm install
  WARN  deprecated next@14.2.21: This version has a security vulnerability. Please upgrade to a patched version. See https://nextjs.org/blog/security-update-2025-12-11 for more details.
