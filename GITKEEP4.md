@@ -35,8 +35,6 @@ components/listings/.gitkeep
 
 D=>C task2 отправлен Посмотри GITKEEP*.md и приступай. подключись через project_knowledge_search GitHub https://github.com/Solarpaletten/solar-nextjs-template 
 
-app/api/price/.gitkeep
-
 omponents/listings/.gitkeep
 
 prisma/migrations/.gitkeep
