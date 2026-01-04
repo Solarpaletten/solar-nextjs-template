@@ -2,6 +2,8 @@
 // CLUSTERING ENGINE
 // Solar Template - lib/clustering.ts
 // ===========================================
+// TASK 13.4: Added houseId for Map ↔ Sidebar sync
+// ===========================================
 
 import Supercluster from 'supercluster';
 import { getSegment, type PriceSegment } from '@/lib/segmentation';
@@ -11,7 +13,7 @@ import { getSegment, type PriceSegment } from '@/lib/segmentation';
 // ===========================================
 
 export interface ClusterPoint {
-  id: string;
+  id: string;           // This IS the houseId
   lat: number;
   lng: number;
   priceSqm: number;
@@ -31,7 +33,9 @@ export interface ClusterFeature {
     cluster_id?: number;
     point_count?: number;
     point_count_abbreviated?: string;
-    // For individual points
+    // TASK 13.4: Unified house identifier
+    houseId: string | null;  // null for clusters, house.id for points
+    // Legacy (kept for compatibility)
     listing_id?: string;
     price_sqm?: number;
     segment?: PriceSegment;
@@ -73,7 +77,8 @@ export function loadPoints(
     },
     properties: {
       cluster: false,
-      listing_id: point.id,
+      houseId: point.id,           // TASK 13.4: explicit houseId
+      listing_id: point.id,        // Legacy support
       price_sqm: point.priceSqm,
       segment: point.segment,
       property_type: point.propertyType,
@@ -104,17 +109,22 @@ export function getClusters(
           cluster_id: cluster.properties.cluster_id,
           point_count: cluster.properties.point_count,
           point_count_abbreviated: formatCount(cluster.properties.point_count),
+          houseId: null,  // Clusters don't have single houseId
         },
       };
     }
     
+    // Individual point - houseId is the identifier
+    const houseId = cluster.properties.houseId || cluster.properties.listing_id;
+    
     return {
       type: 'Feature',
-      id: cluster.properties.listing_id,
+      id: houseId,
       geometry: cluster.geometry,
       properties: {
         cluster: false,
-        listing_id: cluster.properties.listing_id,
+        houseId: houseId,                             // TASK 13.4
+        listing_id: houseId,                          // Legacy
         price_sqm: cluster.properties.price_sqm,
         segment: cluster.properties.segment,
         property_type: cluster.properties.property_type,
@@ -134,18 +144,23 @@ export function getClusterLeaves(
 ): ClusterFeature[] {
   const leaves = index.getLeaves(clusterId, limit, offset);
   
-  return leaves.map((leaf: any) => ({
-    type: 'Feature',
-    id: leaf.properties.listing_id,
-    geometry: leaf.geometry,
-    properties: {
-      cluster: false,
-      listing_id: leaf.properties.listing_id,
-      price_sqm: leaf.properties.price_sqm,
-      segment: leaf.properties.segment,
-      property_type: leaf.properties.property_type,
-    },
-  }));
+  return leaves.map((leaf: any) => {
+    const houseId = leaf.properties.houseId || leaf.properties.listing_id;
+    
+    return {
+      type: 'Feature',
+      id: houseId,
+      geometry: leaf.geometry,
+      properties: {
+        cluster: false,
+        houseId: houseId,
+        listing_id: houseId,
+        price_sqm: leaf.properties.price_sqm,
+        segment: leaf.properties.segment,
+        property_type: leaf.properties.property_type,
+      },
+    };
+  });
 }
 
 /**
@@ -156,6 +171,21 @@ export function getClusterExpansionZoom(
   clusterId: number
 ): number {
   return index.getClusterExpansionZoom(clusterId);
+}
+
+/**
+ * TASK 13.4: Extract visible houseIds from features
+ */
+export function extractVisibleHouseIds(features: ClusterFeature[]): string[] {
+  const ids: string[] = [];
+  
+  for (const feature of features) {
+    if (!feature.properties.cluster && feature.properties.houseId) {
+      ids.push(feature.properties.houseId);
+    }
+  }
+  
+  return [...new Set(ids)]; // Deduplicate
 }
 
 // ===========================================

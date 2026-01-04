@@ -2,7 +2,7 @@
 // LISTING SIDEBAR
 // Solar Template - components/sidebar/ListingSidebar.tsx
 // ============================================================
-// TASK 13.3: Phase 2 - Real Data with loading/error states
+// TASK 13.4: Map ↔ Sidebar Real Sync with highlighting
 // ============================================================
 
 'use client';
@@ -41,7 +41,6 @@ function formatDate(dateString: string): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  return `${Math.floor(diffDays / 7)}w ago`;
 
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
@@ -50,7 +49,7 @@ function formatDate(dateString: string): string {
 }
 
 // ============================================================
-// LISTING CARD (inline for sidebar)
+// LISTING CARD
 // ============================================================
 
 interface SidebarListingCardProps {
@@ -72,7 +71,7 @@ function SidebarListingCard({
 }: SidebarListingCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Scroll into view when selected
+  // TASK 13.4: Scroll into view when selected from map
   useEffect(() => {
     if (isSelected && cardRef.current) {
       cardRef.current.scrollIntoView({
@@ -92,10 +91,10 @@ function SidebarListingCard({
         'p-3 rounded-lg cursor-pointer transition-all duration-200',
         'border-2',
         isSelected
-          ? 'border-blue-500 bg-blue-50 shadow-md'
+          ? 'border-blue-500 bg-blue-50 shadow-md ring-2 ring-blue-200'
           : isHovered
-            ? 'border-blue-300 bg-blue-50/50'
-            : 'border-transparent bg-white hover:bg-gray-50'
+          ? 'border-blue-300 bg-blue-50/50'
+          : 'border-transparent bg-white hover:bg-gray-50'
       )}
     >
       {/* Header */}
@@ -132,7 +131,7 @@ function SidebarListingCard({
               d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z"
             />
           </svg>
-          {listing.rooms}
+          {listing.rooms} floors
         </span>
         <span className="flex items-center gap-1">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -143,7 +142,7 @@ function SidebarListingCard({
               d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
             />
           </svg>
-          {listing.areaSqm}m²
+          {Math.floor(listing.areaSqm)}m²
         </span>
         <span className="text-gray-400">
           CHF {listing.priceSqm.toLocaleString('de-CH')}/m²
@@ -267,7 +266,7 @@ export function ListingSidebar({
                 />
               </svg>
               <p className="text-sm">No listings in this area</p>
-              <p className="text-xs">Try zooming out</p>
+              <p className="text-xs">Try zooming out or panning the map</p>
             </div>
           )}
 

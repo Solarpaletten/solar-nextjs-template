@@ -2,13 +2,13 @@
 // HOME CLIENT
 // Solar Template - components/HomeClient.tsx
 // ============================================================
-// TASK 13.3: Phase 2 - Real Data from API
-// Lifted state wrapper for map and sidebar synchronization
+// TASK 13.4: Map ↔ Sidebar Real Sync (UX Core)
+// Единый источник правды: house.id
 // ============================================================
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { MapContainer } from '@/components/map/MapContainer';
 import { ListingSidebar } from '@/components/sidebar/ListingSidebar';
 import type { BoundingBox, Point } from '@/types/map';
@@ -88,18 +88,35 @@ function bboxToString(bbox: BoundingBox): string {
 // ============================================================
 
 export function HomeClient() {
-  // Data state
-  const [houses, setHouses] = useState<SyncListing[]>([]);
+  // ===========================================
+  // DATA STATE
+  // ===========================================
+  const [allHouses, setAllHouses] = useState<SyncListing[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Sync state
+  // ===========================================
+  // TASK 13.4: SYNC STATE (единый источник правды)
+  // ===========================================
   const [bbox, setBbox] = useState<BoundingBox | null>(null);
+  const [visibleHouseIds, setVisibleHouseIds] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Fetch houses when bbox changes
+  // ===========================================
+  // TASK 13.4: Sidebar показывает ТОЛЬКО видимые на карте
+  // ===========================================
+  const visibleListings = useMemo(() => {
+    if (visibleHouseIds.length === 0) return [];
+    
+    const idsSet = new Set(visibleHouseIds);
+    return allHouses.filter((house) => idsSet.has(house.id));
+  }, [allHouses, visibleHouseIds]);
+
+  // ===========================================
+  // FETCH HOUSES when bbox changes
+  // ===========================================
   useEffect(() => {
     if (!bbox) return;
 
@@ -111,7 +128,7 @@ export function HomeClient() {
 
       try {
         const response = await fetch(
-          `/api/houses?bbox=${bboxToString(bbox as BoundingBox)}&limit=100`,
+          `/api/houses?bbox=${bboxToString(bbox)}&limit=500`,
           { signal: controller.signal }
         );
 
@@ -126,7 +143,7 @@ export function HomeClient() {
           .map(transformHouseToListing)
           .filter((l): l is SyncListing => l !== null);
 
-        setHouses(listings);
+        setAllHouses(listings);
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') {
           return; // Ignore aborted requests
@@ -143,9 +160,16 @@ export function HomeClient() {
     return () => controller.abort();
   }, [bbox]);
 
-  // Map callbacks
+  // ===========================================
+  // MAP CALLBACKS
+  // ===========================================
   const handleBboxChange = useCallback((newBbox: BoundingBox) => {
     setBbox(newBbox);
+  }, []);
+
+  // TASK 13.4: Receive visible IDs from map
+  const handleVisibleHouseIdsChange = useCallback((ids: string[]) => {
+    setVisibleHouseIds(ids);
   }, []);
 
   const handlePointSelect = useCallback((id: string) => {
@@ -156,20 +180,26 @@ export function HomeClient() {
     setHoveredId(id);
   }, []);
 
-  // Sidebar callbacks
+  // ===========================================
+  // SIDEBAR CALLBACKS
+  // ===========================================
   const handleListingClick = useCallback((listing: SyncListing) => {
     setSelectedId(listing.id);
+    // Map will auto-zoom via selectedId change
   }, []);
 
   const handleListingHover = useCallback((id: string | null) => {
     setHoveredId(id);
   }, []);
 
+  // ===========================================
+  // RENDER
+  // ===========================================
   return (
     <div className="flex h-screen w-full overflow-hidden">
-      {/* Sidebar */}
+      {/* Sidebar - shows ONLY visible houses */}
       <ListingSidebar
-        listings={houses}
+        listings={visibleListings}
         selectedId={selectedId}
         hoveredId={hoveredId}
         collapsed={sidebarCollapsed}
@@ -185,6 +215,7 @@ export function HomeClient() {
         <MapContainer
           className="w-full h-full"
           onBboxChange={handleBboxChange}
+          onVisibleHouseIdsChange={handleVisibleHouseIdsChange}
           onPointSelect={handlePointSelect}
           onPointHover={handlePointHover}
           selectedId={selectedId}

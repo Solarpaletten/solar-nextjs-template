@@ -2,6 +2,8 @@
 // MAP TYPES
 // Solar Template - types/map.ts
 // ===========================================
+// TASK 13.4: Added houseId to cluster properties
+// ===========================================
 
 import type { PriceSegment } from '@/lib/segmentation';
 
@@ -52,8 +54,11 @@ export interface ClusterProperties {
   cluster_id?: number;
   point_count?: number;
   point_count_abbreviated?: string;
-  // For individual points
+  // TASK 13.4: Unified identifier
+  houseId?: string | null;  // null for clusters, string for points
+  // Legacy support
   listing_id?: string;
+  // Price data
   price?: number;
   price_sqm?: number;
   segment?: PriceSegment;
@@ -105,4 +110,14 @@ export interface MapClickEvent {
 export interface MapMoveEvent {
   viewport: MapViewport;
   bbox: BoundingBox;
+}
+
+// ===========================================
+// SYNC EVENTS (TASK 13.4)
+// ===========================================
+
+export interface VisibleFeaturesEvent {
+  houseIds: string[];
+  clusterCount: number;
+  pointCount: number;
 }

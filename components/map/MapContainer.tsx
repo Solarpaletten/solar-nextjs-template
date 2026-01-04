@@ -2,7 +2,7 @@
 // MAP CONTAINER
 // Solar Template - components/map/MapContainer.tsx
 // ===========================================
-// TASK 12: Phase 1 - Added sync props for sidebar integration
+// TASK 13.4: Map ↔ Sidebar Real Sync
 // ===========================================
 
 'use client';
@@ -13,6 +13,7 @@ import { useClusters } from '@/hooks/useClusters';
 import { ClusterLayer } from '@/components/map/ClusterLayer';
 import { Legend } from '@/components/map/Legend';
 import { SegmentPopup } from '@/components/map/SegmentPopup';
+import { extractVisibleHouseIds } from '@/lib/clustering';
 import type { Point, BoundingBox, MapViewport, ClusterFeature } from '@/types/map';
 import type { SegmentsResponse } from '@/types/api';
 
@@ -22,10 +23,12 @@ import type { SegmentsResponse } from '@/types/api';
 
 interface MapContainerProps {
   className?: string;
-  // Sync props (Phase 1)
+  // TASK 13.4: Sync callbacks
   onBboxChange?: (bbox: BoundingBox) => void;
-  onPointSelect?: (id: string) => void;
-  onPointHover?: (id: string | null) => void;
+  onVisibleHouseIdsChange?: (ids: string[]) => void;
+  onPointSelect?: (houseId: string) => void;
+  onPointHover?: (houseId: string | null) => void;
+  // Selected/hovered from parent
   selectedId?: string | null;
   hoveredId?: string | null;
 }
@@ -37,6 +40,7 @@ interface MapContainerProps {
 export function MapContainer({
   className = '',
   onBboxChange,
+  onVisibleHouseIdsChange,
   onPointSelect,
   onPointHover,
   selectedId,
@@ -61,17 +65,34 @@ export function MapContainer({
     enabled: isLoaded,
   });
 
+  // ===========================================
+  // TASK 13.4: Sync visible houseIds with parent
+  // ===========================================
+  useEffect(() => {
+    if (!clusters.length) {
+      onVisibleHouseIdsChange?.([]);
+      return;
+    }
+
+    const visibleIds = extractVisibleHouseIds(clusters);
+    onVisibleHouseIdsChange?.(visibleIds);
+  }, [clusters, onVisibleHouseIdsChange]);
+
   // Notify parent of bbox changes
   useEffect(() => {
-    if (bbox && onBboxChange) {
-      onBboxChange(bbox);
+    if (bbox) {
+      onBboxChange?.(bbox);
     }
   }, [bbox, onBboxChange]);
 
+  // ===========================================
+  // HANDLERS
+  // ===========================================
+
   // Handle map move
   function handleMapMove(newViewport: MapViewport, newBbox: BoundingBox) {
-    // Don't auto-close popup on small movements
-    // Bbox change handled via useEffect
+    // Close popup on move
+    setSelectedCluster(null);
   }
 
   // Handle map click
@@ -92,37 +113,60 @@ export function MapContainer({
     }
   }
 
-  // Handle zoom to cluster
-  const handleZoomIn = useCallback(
+  // TASK 13.4: Handle cluster click → zoom in
+  const handleClusterClick = useCallback(
     (feature: ClusterFeature) => {
       const [lng, lat] = feature.geometry.coordinates;
-      // Offset lat вниз чтобы popup был виден сверху
-      flyTo({ lat: lat - 0.003, lng }, viewport.zoom + 2);
+      flyTo({ lat, lng }, viewport.zoom + 2);
       setSelectedCluster(null);
     },
     [flyTo, viewport.zoom]
   );
 
-  // Handle point click (sync with sidebar)
-  function handlePointClick(feature: ClusterFeature) {
-    const houseId = feature.properties.listing_id;
-    if (houseId) {
-      console.log('Point clicked:', houseId);
+  // TASK 13.4: Handle point click → select + zoom
+  const handlePointClick = useCallback(
+    (feature: ClusterFeature) => {
+      const houseId = feature.properties.houseId || feature.properties.listing_id;
+      if (!houseId) return;
+
+      // Notify parent
       onPointSelect?.(houseId);
-    }
-  }
 
-  // Handle point hover (sync with sidebar)
-  function handlePointMouseEnter(feature: ClusterFeature) {
-    const houseId = feature.properties.listing_id;
-    if (houseId) {
-      onPointHover?.(houseId);
-    }
-  }
+      // Zoom to point if not already close
+      const [lng, lat] = feature.geometry.coordinates;
+      if (viewport.zoom < 16) {
+        flyTo({ lat, lng }, Math.max(viewport.zoom, 16));
+      }
+    },
+    [flyTo, viewport.zoom, onPointSelect]
+  );
 
-  function handlePointMouseLeave() {
-    onPointHover?.(null);
-  }
+  // TASK 13.4: Handle point hover → sync with sidebar
+  const handlePointHover = useCallback(
+    (feature: ClusterFeature | null) => {
+      if (!feature) {
+        onPointHover?.(null);
+        return;
+      }
+      const houseId = feature.properties.houseId || feature.properties.listing_id;
+      onPointHover?.(houseId || null);
+    },
+    [onPointHover]
+  );
+
+  // Handle zoom to cluster
+  const handleZoomIn = useCallback(
+    (feature: ClusterFeature) => {
+      const [lng, lat] = feature.geometry.coordinates;
+      flyTo({ lat, lng }, viewport.zoom + 2);
+      setSelectedCluster(null);
+    },
+    [flyTo, viewport.zoom]
+  );
+
+  // ===========================================
+  // RENDER
+  // ===========================================
 
   return (
     <div className={`relative w-full h-full ${className}`}>
@@ -134,12 +178,9 @@ export function MapContainer({
         <ClusterLayer
           map={map}
           clusters={clusters}
-          onClusterClick={(feature) => {
-            // Handle via map click
-          }}
+          onClusterClick={handleClusterClick}
           onPointClick={handlePointClick}
-          onPointHover={handlePointMouseEnter}
-          onPointLeave={handlePointMouseLeave}
+          onPointHover={handlePointHover}
           selectedId={selectedId}
           hoveredId={hoveredId}
         />
