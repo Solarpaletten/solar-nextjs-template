@@ -1,5 +1,5 @@
 
-D=>C task6.2 отправлен Посмотри GITKEEP*.md и приступай. подключись через project_knowledge_search GitHub https://github.com/Solarpaletten/solar-nextjs-template 
+D=>C task6.2 error отправлен Посмотри GITKEEP*.md и приступай. подключись через project_knowledge_search GitHub https://github.com/Solarpaletten/solar-nextjs-template 
 
 leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % pnpm approve-builds
 ✔ Choose which packages to build (Press <space> to select, <a> to toggle all, <i> to invert selection) · No items were selected
