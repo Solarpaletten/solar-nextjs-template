@@ -847,4 +847,4 @@ leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % cat components/sidebar/
 
 export { ListingSidebar } from './ListingSidebar';%                                                  
 leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % 
-task15.2
+task15.3
