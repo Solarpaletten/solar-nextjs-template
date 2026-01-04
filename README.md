@@ -215,3 +215,4 @@ MIT
 **Solar House Price** — *Real Estate Visualization Platform*
 
 *v1.0.0 — January 2026*
+git commit -m "TASK 13.4: Map ↔ Sidebar"
