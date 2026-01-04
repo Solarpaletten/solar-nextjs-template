@@ -126,7 +126,7 @@ async function fetchPoints(bbox: BBox): Promise<ClusterPoint[]> {
     `;
     
     if (houses.length > 0) {
-      return houses.map(house => {
+      return houses.map((house: HouseRow) => {
         const priceSqm = generatePriceSqm(house.building_type);
         return {
           id: house.id,
@@ -144,6 +144,16 @@ async function fetchPoints(bbox: BBox): Promise<ClusterPoint[]> {
   
   // Fallback: demo data
   return generateDemoPoints(bbox, 50);
+}
+
+//
+
+interface HouseRow {
+  id: string;
+  centroid_lng: number;
+  centroid_lat: number;
+  area_sqm: number | null;
+  building_type: string | null;
 }
 
 // ===========================================
