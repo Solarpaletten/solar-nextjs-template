@@ -62,10 +62,10 @@ export async function GET(request: NextRequest) {
 
 function generateDemoSegments() {
   // Random distribution
-  const low = Math.floor(Math.random() * 15) + 5;
-  const mid = Math.floor(Math.random() * 25) + 15;
-  const upper = Math.floor(Math.random() * 15) + 5;
-  const premium = Math.floor(Math.random() * 10) + 2;
+  const low = Math.floor(Math.random() * 30) + 10;
+  const mid = Math.floor(Math.random() * 25) + 10;
+  const upper = Math.floor(Math.random() * 20) + 5;
+  const premium = Math.floor(Math.random() * 15) + 2;
   const total = low + mid + upper + premium;
   
   const segmentOrder: PriceSegment[] = ['low', 'mid', 'upper', 'premium'];

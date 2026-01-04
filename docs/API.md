@@ -76,7 +76,6 @@ Create a new house.
   "osm_id": "12345678",
   "building_type": "residential",
   "area_sqm": 120.5,
-  "floors": 3,
   "centroid": { "lat": 46.255, "lng": 6.954 }
 }
 ```

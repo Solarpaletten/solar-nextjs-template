@@ -2,7 +2,7 @@
 // LISTING SIDEBAR
 // Solar Template - components/sidebar/ListingSidebar.tsx
 // ============================================================
-// TASK 12: Phase 1 - Map ↔ Listings Sync
+// TASK 13.3: Phase 2 - Real Data with loading/error states
 // ============================================================
 
 'use client';
@@ -23,6 +23,8 @@ interface ListingSidebarProps {
   onToggle: () => void;
   onListingClick: (listing: SyncListing) => void;
   onListingHover: (id: string | null) => void;
+  loading?: boolean;
+  error?: string | null;
 }
 
 // ============================================================
@@ -30,8 +32,8 @@ interface ListingSidebarProps {
 // ============================================================
 
 function formatPrice(price: number, type: 'rent' | 'sale'): string {
-  const formatted = new Intl.NumberFormat('de-DE').format(price);
-  return type === 'rent' ? `€${formatted}/mo` : `€${formatted}`;
+  const formatted = new Intl.NumberFormat('de-CH').format(price);
+  return type === 'rent' ? `CHF ${formatted}/mo` : `CHF ${formatted}`;
 }
 
 function formatDate(dateString: string): string {
@@ -39,7 +41,8 @@ function formatDate(dateString: string): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  
+  return `${Math.floor(diffDays / 7)}w ago`;
+
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
   if (diffDays < 7) return `${diffDays}d ago`;
@@ -91,8 +94,8 @@ function SidebarListingCard({
         isSelected
           ? 'border-blue-500 bg-blue-50 shadow-md'
           : isHovered
-          ? 'border-blue-300 bg-blue-50/50'
-          : 'border-transparent bg-white hover:bg-gray-50'
+            ? 'border-blue-300 bg-blue-50/50'
+            : 'border-transparent bg-white hover:bg-gray-50'
       )}
     >
       {/* Header */}
@@ -143,8 +146,29 @@ function SidebarListingCard({
           {listing.areaSqm}m²
         </span>
         <span className="text-gray-400">
-          €{listing.priceSqm}/m²
+          CHF {listing.priceSqm.toLocaleString('de-CH')}/m²
         </span>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// LOADING SKELETON
+// ============================================================
+
+function ListingSkeleton() {
+  return (
+    <div className="p-3 rounded-lg bg-white animate-pulse">
+      <div className="flex items-center justify-between mb-2">
+        <div className="h-5 w-12 bg-gray-200 rounded" />
+        <div className="h-4 w-16 bg-gray-200 rounded" />
+      </div>
+      <div className="h-6 w-24 bg-gray-200 rounded mb-1" />
+      <div className="h-4 w-full bg-gray-200 rounded mb-2" />
+      <div className="flex gap-3">
+        <div className="h-4 w-12 bg-gray-200 rounded" />
+        <div className="h-4 w-12 bg-gray-200 rounded" />
       </div>
     </div>
   );
@@ -162,6 +186,8 @@ export function ListingSidebar({
   onToggle,
   onListingClick,
   onListingHover,
+  loading = false,
+  error = null,
 }: ListingSidebarProps) {
   return (
     <aside
@@ -175,7 +201,9 @@ export function ListingSidebar({
         {!collapsed && (
           <div>
             <h2 className="font-semibold text-gray-900">Listings</h2>
-            <p className="text-xs text-gray-500">{listings.length} in view</p>
+            <p className="text-xs text-gray-500">
+              {loading ? 'Loading...' : `${listings.length} in view`}
+            </p>
           </div>
         )}
         <button
@@ -199,10 +227,36 @@ export function ListingSidebar({
         </button>
       </div>
 
-      {/* Listings */}
+      {/* Content */}
       {!collapsed && (
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {listings.length === 0 ? (
+          {/* Loading state */}
+          {loading && (
+            <>
+              <ListingSkeleton />
+              <ListingSkeleton />
+              <ListingSkeleton />
+            </>
+          )}
+
+          {/* Error state */}
+          {!loading && error && (
+            <div className="flex flex-col items-center justify-center py-12 text-red-500">
+              <svg className="w-12 h-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              <p className="text-sm font-medium">Error loading listings</p>
+              <p className="text-xs text-red-400 mt-1">{error}</p>
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!loading && !error && listings.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-gray-400">
               <svg className="w-12 h-12 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
@@ -215,7 +269,10 @@ export function ListingSidebar({
               <p className="text-sm">No listings in this area</p>
               <p className="text-xs">Try zooming out</p>
             </div>
-          ) : (
+          )}
+
+          {/* Listings */}
+          {!loading && !error && listings.length > 0 && (
             listings.map((listing) => (
               <SidebarListingCard
                 key={listing.id}
@@ -232,11 +289,15 @@ export function ListingSidebar({
       )}
 
       {/* Collapsed indicator */}
-      {collapsed && listings.length > 0 && (
+      {collapsed && (
         <div className="flex-1 flex items-center justify-center">
-          <div className="bg-blue-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
-            {listings.length}
-          </div>
+          {loading ? (
+            <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          ) : listings.length > 0 ? (
+            <div className="bg-blue-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+              {listings.length > 99 ? '99+' : listings.length}
+            </div>
+          ) : null}
         </div>
       )}
     </aside>

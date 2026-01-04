@@ -30,7 +30,7 @@ export interface House {
   osmId?: string;
   buildingType?: string;
   areaSqm?: number;
-  floors?: number;
+  buildingLevels?: number;
   centroid: Point;
   geometry?: GeoJSON.Geometry;
   createdAt: Date;

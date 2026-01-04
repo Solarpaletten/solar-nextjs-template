@@ -103,7 +103,7 @@ solar-template/
 
 ### Price Estimation
 - **Building type multipliers** (residential, commercial, industrial)
-- **Floor bonus** calculation
+- **Billing area adjustments**
 - **Confidence scoring** (50-95%)
 - **24h cache** for performance
 

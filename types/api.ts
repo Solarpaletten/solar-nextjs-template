@@ -38,7 +38,7 @@ export interface HouseResponse {
   osm_id?: string;
   building_type?: string;
   area_sqm?: number;
-  floors?: number;
+  building_levels?: number;
   centroid: {
     lat: number;
     lng: number;

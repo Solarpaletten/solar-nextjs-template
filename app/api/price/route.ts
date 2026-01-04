@@ -4,7 +4,7 @@
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';  
+import { prisma } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 // ============================================================
@@ -47,28 +47,28 @@ const BUILDING_TYPE_MULTIPLIERS: Record<string, number> = {
 
 function calculateEstimate(house: HouseData): PriceEstimate {
   const basePrice = BASE_PRICE;
-  
+
   // Building type multiplier
   const typeMultiplier = BUILDING_TYPE_MULTIPLIERS[house.buildingType] ?? 1.0;
-  
-  // Floor bonus (+2% per floor above 3)
-  const floors = house.buildingLevels ?? 3;
-  const floorBonus = floors > 3 ? 1 + (floors - 3) * 0.02 : 1.0;
-  
+
   // Calculate price per sqm
-  const priceSqm = Math.round(basePrice * typeMultiplier * floorBonus);
-  
+  // FIX — добавить функцию или inline:
+  const levelsFactor = house.buildingLevels && house.buildingLevels > 3
+    ? 1 + (house.buildingLevels - 3) * 0.02
+    : 1.0;
+  const priceSqm = Math.round(basePrice * typeMultiplier * levelsFactor);
+
   // Total price
   const area = house.areaSqm ?? 100;
   const priceTotal = Math.round(priceSqm * area);
-  
+
   // Confidence based on data completeness
   let confidence = 0.5;
   if (house.areaSqm) confidence += 0.15;
   if (house.buildingLevels) confidence += 0.15;
   if (house.buildingType !== 'yes') confidence += 0.15;
   confidence = Math.min(confidence, 0.95);
-  
+
   return {
     priceSqm,
     priceTotal,
@@ -199,7 +199,7 @@ export async function GET(request: NextRequest) {
     const estimate = calculateEstimate(house);
 
     // Cache (async)
-    cacheEstimate(houseId, estimate).catch(() => {});
+    cacheEstimate(houseId, estimate).catch(() => { });
 
     return NextResponse.json({
       price_sqm: estimate.priceSqm,

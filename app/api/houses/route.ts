@@ -7,7 +7,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { parseBbox } from '@/lib/geo';
 import { API_DEFAULT_LIMIT, API_MAX_LIMIT } from '@/config/constants';
-export const dynamic = 'force-dynamic';
 
 // ===========================================
 // GET /api/houses
@@ -52,7 +51,7 @@ export async function GET(request: NextRequest) {
         osm_id: string | null;
         building_type: string | null;
         area_sqm: number | null;
-        floors: number | null;
+        building_levels: number | null;
         centroid_lng: number;
         centroid_lat: number;
       }>>`
@@ -61,7 +60,7 @@ export async function GET(request: NextRequest) {
           osm_id,
           building_type,
           area_sqm,
-          floors,
+          building_levels,
           ST_X(centroid::geometry) as centroid_lng,
           ST_Y(centroid::geometry) as centroid_lat
         FROM houses
@@ -100,7 +99,7 @@ export async function GET(request: NextRequest) {
       osm_id: house.osm_id ?? house.osmId ?? null,
       building_type: house.building_type ?? house.buildingType ?? null,
       area_sqm: house.area_sqm ?? house.areaSqm ?? null,
-      floors: house.floors ?? null,
+      building_levels: house.building_levels ?? house.building_levels ?? null,
       centroid: house.centroid_lng && house.centroid_lat
         ? { lat: house.centroid_lat, lng: house.centroid_lng }
         : null,
@@ -133,7 +132,7 @@ interface CreateHouseBody {
   osm_id?: string;
   building_type?: string;
   area_sqm?: number;
-  floors?: number;
+  building_levels?: number;
   centroid?: {
     lat: number;
     lng: number;
@@ -154,10 +153,11 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    if (body.floors !== undefined) {
-      if (typeof body.floors !== 'number' || body.floors < 1 || !Number.isInteger(body.floors)) {
+    if (body.building_levels !== undefined) {
+      if (
+        typeof body.building_levels !== 'number' || body.building_levels < 0) {
         return NextResponse.json(
-          { error: 'floors must be a positive integer' },
+          { error: 'building_levels must be a non-negative number' },
           { status: 400 }
         );
       }
@@ -182,10 +182,10 @@ export async function POST(request: NextRequest) {
     // Create house
     const house = await prisma.house.create({
       data: {
-        osmId: body.osm_id,
+        osmId: body.osm_id ? BigInt(body.osm_id) : null,
         buildingType: body.building_type,
         areaSqm: body.area_sqm,
-        floors: body.floors,
+        buildingLevels: body.building_levels,
       },
     });
     
@@ -201,10 +201,10 @@ export async function POST(request: NextRequest) {
     // Return created house
     return NextResponse.json({
       id: house.id,
-      osm_id: house.osmId,
+      osm_id: house.osmId?.toString() ?? null,
       building_type: house.buildingType,
       area_sqm: house.areaSqm,
-      floors: house.floors,
+      building_levels: house.buildingLevels,
       centroid: body.centroid ?? null,
     }, { status: 201 });
     

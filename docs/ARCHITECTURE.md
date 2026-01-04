@@ -193,7 +193,7 @@ ON houses(osm_id) WHERE osm_id IS NOT NULL;
 ### Factors
 1. **Base price** — Regional average (€/m²)
 2. **Building type** — Multiplier (0.6-1.15)
-3. **Floor bonus** — +2% per floor above 3
+3. **Building size** — Area adjustments
 4. **Data completeness** — Confidence score
 
 ### Multipliers

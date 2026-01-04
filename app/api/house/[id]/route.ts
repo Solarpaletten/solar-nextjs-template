@@ -5,7 +5,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-export const dynamic = 'force-dynamic';
 
 // ===========================================
 // TYPES
@@ -41,7 +40,7 @@ export async function GET(
       osm_id: string | null;
       building_type: string | null;
       area_sqm: number | null;
-      floors: number | null;
+      building_levels: number | null;
       centroid_lng: number | null;
       centroid_lat: number | null;
       created_at: Date;
@@ -52,7 +51,7 @@ export async function GET(
         osm_id,
         building_type,
         area_sqm,
-        floors,
+        building_levels,
         ST_X(centroid::geometry) as centroid_lng,
         ST_Y(centroid::geometry) as centroid_lat,
         created_at,
@@ -83,17 +82,17 @@ export async function GET(
       osm_id: house.osm_id,
       building_type: house.building_type,
       area_sqm: house.area_sqm,
-      floors: house.floors,
+      building_levels: house.building_levels,
       centroid: house.centroid_lng && house.centroid_lat
         ? { lat: house.centroid_lat, lng: house.centroid_lng }
         : null,
       price_estimate: priceEstimate
         ? {
-            price: priceEstimate.price,
-            price_sqm: priceEstimate.priceSqm,
-            segment: priceEstimate.segment,
-            confidence: priceEstimate.confidence,
-          }
+          price_total: priceEstimate.priceTotal,
+          price_sqm: priceEstimate.priceSqm,
+          method: priceEstimate.method,
+          confidence: Number(priceEstimate.confidence),
+        }
         : null,
       created_at: house.created_at,
       updated_at: house.updated_at,
