@@ -1,3 +1,5 @@
+L=> 
+leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % cat components/map/MapContainer.tsx
 // ===========================================
 // MAP CONTAINER
 // Solar Template - components/map/MapContainer.tsx
@@ -121,3 +123,5 @@ export function MapContainer({ className = '' }: MapContainerProps) {
     </div>
   );
 }
+leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % 
+task10
