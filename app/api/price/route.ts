@@ -2,12 +2,9 @@
 // GET /api/price?house_id=xxx
 // Solar Template - Price Estimation Endpoint
 // ============================================================
-// Commit marker: app/api/price/.gitkeep
-// Reused from: _legacy/solar-momorepo/apps/map-core/app/api/price/estimate/route.ts
-// ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db';  // ✅ FIXED: was '@/lib/prisma'
 
 // ============================================================
 // TYPES
@@ -29,13 +26,11 @@ interface PriceEstimate {
   confidence: number;
 }
 
-interface CachedEstimate extends PriceEstimate {}
-
 // ============================================================
-// PRICE ENGINE (Simplified from @solar/pricing)
+// PRICE ENGINE
 // ============================================================
 
-const BERLIN_BASE_PRICE = 6500; // €/sqm
+const BASE_PRICE = 6500; // €/sqm
 
 const BUILDING_TYPE_MULTIPLIERS: Record<string, number> = {
   residential: 1.0,
@@ -46,11 +41,11 @@ const BUILDING_TYPE_MULTIPLIERS: Record<string, number> = {
   retail: 0.95,
   house: 1.10,
   detached: 1.15,
-  yes: 1.0, // OSM default
+  yes: 1.0,
 };
 
 function calculateEstimate(house: HouseData): PriceEstimate {
-  const basePrice = BERLIN_BASE_PRICE;
+  const basePrice = BASE_PRICE;
   
   // Building type multiplier
   const typeMultiplier = BUILDING_TYPE_MULTIPLIERS[house.buildingType] ?? 1.0;
@@ -62,7 +57,7 @@ function calculateEstimate(house: HouseData): PriceEstimate {
   // Calculate price per sqm
   const priceSqm = Math.round(basePrice * typeMultiplier * floorBonus);
   
-  // Total price if area is known
+  // Total price
   const area = house.areaSqm ?? 100;
   const priceTotal = Math.round(priceSqm * area);
   
@@ -82,7 +77,7 @@ function calculateEstimate(house: HouseData): PriceEstimate {
 }
 
 // ============================================================
-// HELPER FUNCTIONS
+// HELPERS
 // ============================================================
 
 async function getHouseData(houseId: string): Promise<HouseData | null> {
@@ -93,8 +88,8 @@ async function getHouseData(houseId: string): Promise<HouseData | null> {
         area_sqm as "areaSqm",
         building_type as "buildingType",
         building_levels as "buildingLevels",
-        ST_X(ST_Centroid(geometry)) as "centroidLng",
-        ST_Y(ST_Centroid(geometry)) as "centroidLat"
+        ST_X(centroid::geometry) as "centroidLng",
+        ST_Y(centroid::geometry) as "centroidLat"
       FROM houses
       WHERE id = ${houseId}::uuid
     `;
@@ -104,55 +99,48 @@ async function getHouseData(houseId: string): Promise<HouseData | null> {
   }
 }
 
-async function getCachedEstimate(houseId: string): Promise<CachedEstimate | null> {
+async function getCachedEstimate(houseId: string): Promise<PriceEstimate | null> {
   try {
     const cached = await prisma.priceEstimate.findUnique({
       where: { houseId },
     });
 
-    if (cached && cached.expiresAt > new Date()) {
+    if (cached && cached.updatedAt > new Date(Date.now() - 24 * 60 * 60 * 1000)) {
       return {
         priceSqm: Number(cached.priceSqm),
-        priceTotal: cached.priceTotal ? Number(cached.priceTotal) : null,
-        method: cached.method,
-        confidence: Number(cached.confidence),
+        priceTotal: cached.price ? Number(cached.price) : null,
+        method: 'cached',
+        confidence: cached.confidence === 'high' ? 0.9 : cached.confidence === 'medium' ? 0.7 : 0.5,
       };
     }
     return null;
   } catch {
-    // Table might not exist yet
     return null;
   }
 }
 
-async function cacheEstimate(
-  houseId: string,
-  estimate: PriceEstimate
-): Promise<void> {
+async function cacheEstimate(houseId: string, estimate: PriceEstimate): Promise<void> {
   try {
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h TTL
+    const confidence = estimate.confidence >= 0.8 ? 'high' : estimate.confidence >= 0.6 ? 'medium' : 'low';
+    const segment = estimate.priceSqm < 6000 ? 'low' : estimate.priceSqm < 8000 ? 'mid' : estimate.priceSqm < 10000 ? 'upper' : 'premium';
 
     await prisma.priceEstimate.upsert({
       where: { houseId },
       update: {
+        price: estimate.priceTotal ?? 0,
         priceSqm: estimate.priceSqm,
-        priceTotal: estimate.priceTotal,
-        method: estimate.method,
-        confidence: estimate.confidence,
-        calculatedAt: new Date(),
-        expiresAt,
+        segment,
+        confidence,
       },
       create: {
         houseId,
+        price: estimate.priceTotal ?? 0,
         priceSqm: estimate.priceSqm,
-        priceTotal: estimate.priceTotal,
-        method: estimate.method,
-        confidence: estimate.confidence,
-        expiresAt,
+        segment,
+        confidence,
       },
     });
   } catch {
-    // Table might not exist yet, skip caching
     console.warn('Could not cache price estimate');
   }
 }
@@ -161,24 +149,6 @@ async function cacheEstimate(
 // ROUTE HANDLER
 // ============================================================
 
-/**
- * GET /api/price?house_id=xxx
- *
- * Returns price estimate for a house
- *
- * Query Parameters:
- *   - house_id: UUID of the house (required)
- *
- * Response:
- * {
- *   price_sqm: 7420,
- *   price_total: 630700,
- *   method: "aggregated",
- *   confidence: 0.78,
- *   cached: boolean,
- *   response_time_ms: number
- * }
- */
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
@@ -186,7 +156,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const houseId = searchParams.get('house_id');
 
-    // Validate input
+    // Validate
     if (!houseId) {
       return NextResponse.json(
         { error: 'house_id is required' },
@@ -194,7 +164,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // UUID format validation
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(houseId)) {
       return NextResponse.json(
@@ -203,7 +172,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check cache first
+    // Check cache
     const cached = await getCachedEstimate(houseId);
     if (cached) {
       return NextResponse.json({
@@ -225,13 +194,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Calculate estimate
+    // Calculate
     const estimate = calculateEstimate(house);
 
-    // Cache result (fire and forget)
+    // Cache (async)
     cacheEstimate(houseId, estimate).catch(() => {});
 
-    // Return response
     return NextResponse.json({
       price_sqm: estimate.priceSqm,
       price_total: estimate.priceTotal,

@@ -1,252 +1,202 @@
-# 🏠 Solar Next.js Template v1
+# 🏠 Solar House Price
 
-## Swiss Real Estate Visualization Platform
+**Real Estate Visualization Platform**
 
----
-
-## 🎯 Философия
-
-> **"Открыл → Понял"**
-
-Solar Template создан для **скорости разработки** и **минимальной когнитивной нагрузки**.
-
-### Принципы:
-- **Один проект** — нет monorepo, нет packages
-- **Один package.json** — нет зависимостей между пакетами
-- **Один tsconfig** — единая конфигурация TypeScript
-- **Говорящие имена** — папка = функция
+Premium 3D satellite map visualization for real estate data with price estimates, clustering, and market segmentation.
 
 ---
 
-## 📁 Структура проекта
-
-```
-solar-template/
-│
-├── 📁 app/                 # Next.js App Router (routes)
-│   ├── page.tsx            # / — главная страница
-│   ├── layout.tsx          # Root layout
-│   ├── globals.css         # Global styles
-│   ├── listings/           # /listings — объявления
-│   └── api/                # API endpoints
-│       ├── clusters/       # GET /api/clusters
-│       ├── segments/       # GET /api/segments
-│       └── houses/         # GET /api/houses
-│
-├── 📁 components/          # React компоненты
-│   ├── map/                # Карта и кластеры
-│   │   ├── MapContainer.tsx
-│   │   ├── ClusterLayer.tsx
-│   │   ├── Legend.tsx
-│   │   └── SegmentPopup.tsx
-│   ├── listings/           # Объявления
-│   └── ui/                 # Переиспользуемые UI
-│       └── Button.tsx
-│
-├── 📁 lib/                 # Бизнес-логика
-│   ├── db.ts               # Prisma client
-│   ├── pricing.ts          # Ценообразование
-│   ├── segmentation.ts     # Ценовые сегменты
-│   ├── clustering.ts       # Supercluster
-│   ├── geo.ts              # GIS утилиты
-│   └── utils.ts            # Хелперы
-│
-├── 📁 config/              # Конфигурация
-│   ├── regions.ts          # Регионы (Monthey, Sion...)
-│   ├── coefficients.ts     # Коэффициенты цен
-│   ├── constants.ts        # Константы приложения
-│   └── segments.ts         # Настройки сегментов
-│
-├── 📁 hooks/               # React hooks
-│   ├── useMapbox.ts        # Mapbox интеграция
-│   └── useClusters.ts      # Загрузка кластеров
-│
-├── 📁 types/               # TypeScript типы
-│   ├── map.ts              # Типы карты
-│   └── api.ts              # Типы API
-│
-├── 📁 prisma/              # Database
-│   └── schema.prisma       # Схема БД
-│
-├── 📁 public/              # Static files
-├── 📁 docs/                # Документация
-│
-├── package.json            # 📦 ОДИН
-├── tsconfig.json           # 📦 ОДИН
-├── next.config.js
-├── tailwind.config.ts
-└── README.md
-```
-
----
-
-## 🚀 Быстрый старт
-
-### 1. Клонировать шаблон
+## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/Solarpaletten/solar-nextjs-template my-project
-cd my-project
-```
-
-### 2. Установить зависимости
-
-```bash
+# 1. Install dependencies
 pnpm install
-```
 
-### 3. Настроить окружение
-
-```bash
+# 2. Setup environment
 cp .env.example .env.local
-# Заполнить DATABASE_URL и NEXT_PUBLIC_MAPBOX_TOKEN
-```
+# Fill in DATABASE_URL and NEXT_PUBLIC_MAPBOX_TOKEN
 
-### 4. Инициализировать базу данных
+# 3. Generate Prisma client
+pnpm db:generate
 
-```bash
+# 4. Push schema to database
 pnpm db:push
-```
 
-### 5. Запустить
-
-```bash
+# 5. Run development server
 pnpm dev
 ```
 
-Открыть [http://localhost:3000](http://localhost:3000)
+Open [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 📍 Правило "Открыл → Понял"
+## 📁 Project Structure
 
-### Где искать?
-
-| Вопрос | Ответ |
-|--------|-------|
-| Где логика ценообразования? | `lib/pricing.ts` |
-| Где компоненты карты? | `components/map/` |
-| Где API для кластеров? | `app/api/clusters/route.ts` |
-| Где конфигурация регионов? | `config/regions.ts` |
-| Где типы для карты? | `types/map.ts` |
-| Где хук для Mapbox? | `hooks/useMapbox.ts` |
-| Где Prisma схема? | `prisma/schema.prisma` |
-
-### Импорты (стандарт Solar)
-
-```typescript
-// ✅ ПРАВИЛЬНО — все через @/
-import { prisma } from '@/lib/db';
-import { getSegment } from '@/lib/segmentation';
-import { REGIONS } from '@/config/regions';
-import { Button } from '@/components/ui/Button';
-
-// ❌ НЕПРАВИЛЬНО
-import { prisma } from '../../../lib/db';
-import { getSegment } from '@solar/pricing';
+```
+solar-template/
+├── app/                    # Next.js App Router
+│   ├── page.tsx           # Main map page
+│   ├── layout.tsx         # Root layout
+│   ├── globals.css        # Global styles + Mapbox CSS
+│   └── api/
+│       ├── clusters/      # GET /api/clusters
+│       ├── segments/      # GET /api/segments
+│       ├── houses/        # GET/POST /api/houses
+│       ├── house/[id]/    # GET /api/house/:id
+│       └── price/         # GET /api/price
+│
+├── components/
+│   ├── map/               # Map components
+│   │   ├── MapContainer   # Main map wrapper
+│   │   ├── ClusterLayer   # Marker clustering
+│   │   ├── Legend         # Price legend
+│   │   └── SegmentPopup   # Cluster info popup
+│   ├── listings/          # Listing components
+│   │   ├── ListingCard    # Single listing card
+│   │   └── ListingList    # List with states
+│   └── ui/                # Reusable UI
+│       └── Button
+│
+├── lib/                   # Business logic
+│   ├── db.ts             # Prisma client
+│   ├── pricing.ts        # Price calculation
+│   ├── segmentation.ts   # Price segments
+│   ├── clustering.ts     # Supercluster wrapper
+│   ├── geo.ts            # GIS utilities
+│   └── utils.ts          # Helpers
+│
+├── config/               # Configuration
+│   ├── constants.ts      # App constants
+│   ├── regions.ts        # Map regions
+│   └── coefficients.ts   # Price coefficients
+│
+├── hooks/                # React hooks
+│   ├── useMapbox.ts      # Mapbox integration
+│   └── useClusters.ts    # Cluster data fetching
+│
+├── types/                # TypeScript types
+│   ├── map.ts            # Map types
+│   └── api.ts            # API types
+│
+├── prisma/
+│   ├── schema.prisma     # Database schema
+│   └── migrations/       # SQL migrations
+│
+└── public/               # Static assets
 ```
 
 ---
 
-## 🎨 Ценовые сегменты
+## 🗺️ Features
 
-| Сегмент | Цвет | CHF/m² | Описание |
-|---------|------|--------|----------|
-| 🟢 low | `#22c55e` | < 6'000 | Доступное жильё |
-| 🔵 mid | `#3b82f6` | 6'000-8'000 | Средний рынок |
-| 🟠 upper | `#f97316` | 8'000-10'000 | Выше среднего |
-| 🔴 premium | `#ef4444` | > 10'000 | Премиум |
+### Map Visualization
+- **Mapbox GL JS** with satellite imagery
+- **3D building extrusion** at high zoom
+- **45° pitch** for premium view
+- **Smooth camera transitions**
 
----
+### Clustering
+- **Supercluster** for performance
+- **Color-coded markers** by price segment
+- **Click-to-expand** clusters
+- **Segment popup** with statistics
 
-## 🗺️ Регионы (Valais)
+### Price Estimation
+- **Building type multipliers** (residential, commercial, industrial)
+- **Floor bonus** calculation
+- **Confidence scoring** (50-95%)
+- **24h cache** for performance
 
-| ID | Название | Координаты |
-|----|----------|------------|
-| `monthey` | Monthey | 46.255, 6.954 |
-| `martigny` | Martigny | 46.102, 7.072 |
-| `sion` | Sion | 46.233, 7.360 |
+### Price Segments
+
+| Segment | Color | Range |
+|---------|-------|-------|
+| 🟢 Low | `#22c55e` | < 6,000/m² |
+| 🔵 Mid | `#3b82f6` | 6,000-8,000 |
+| 🟠 Upper | `#f97316` | 8,000-10,000 |
+| 🔴 Premium | `#ef4444` | > 10,000 |
 
 ---
 
 ## 📡 API Endpoints
 
 ### GET /api/clusters
-
-```bash
-GET /api/clusters?bbox=6.90,46.22,7.00,46.29&zoom=14
 ```
+?bbox=minLng,minLat,maxLng,maxLat&zoom=14
+```
+Returns GeoJSON FeatureCollection with clusters and points.
 
 ### GET /api/segments
-
-```bash
-GET /api/segments?cluster_id=1
 ```
+?cluster_id=123
+```
+Returns segment breakdown for a cluster.
+
+### GET /api/houses
+```
+?bbox=minLng,minLat,maxLng,maxLat&limit=100&offset=0
+```
+Returns houses in bounding box.
+
+### GET /api/house/:id
+Returns single house with price estimate.
+
+### GET /api/price
+```
+?house_id=uuid
+```
+Returns price estimate with confidence score.
 
 ---
 
-## 🔧 Как добавить новый домен
+## 🛠️ Tech Stack
 
-### Пример: добавить VAT (налоги)
-
-1. **Логика** → `lib/vat.ts`
-2. **Типы** → `types/vat.ts`
-3. **Конфигурация** → `config/vat-rates.ts`
-4. **API** → `app/api/vat/route.ts`
-5. **Компоненты** → `components/vat/`
-6. **Hook** → `hooks/useVat.ts`
-
-```
-solar/
-├── lib/vat.ts              # Расчёты VAT
-├── types/vat.ts            # Типы
-├── config/vat-rates.ts     # Ставки по кантонам
-├── app/api/vat/route.ts    # API endpoint
-├── components/vat/
-│   └── VatCalculator.tsx
-└── hooks/useVat.ts
-```
-
----
-
-## 📦 Скрипты
-
-| Команда | Описание |
-|---------|----------|
-| `pnpm dev` | Запуск dev-сервера |
-| `pnpm build` | Production сборка |
-| `pnpm start` | Запуск production |
-| `pnpm lint` | Проверка кода |
-| `pnpm typecheck` | Проверка типов |
-| `pnpm db:push` | Синхронизация схемы БД |
-| `pnpm db:studio` | Открыть Prisma Studio |
-
----
-
-## 🏗️ Технологии
-
-| Технология | Версия | Назначение |
-|------------|--------|------------|
+| Technology | Version | Purpose |
+|------------|---------|---------|
 | Next.js | 14 | React framework |
 | TypeScript | 5 | Type safety |
-| Tailwind CSS | 3 | Стилизация |
-| Mapbox GL | 3 | Карты |
-| Supercluster | 8 | Кластеризация |
+| Tailwind CSS | 3 | Styling |
+| Mapbox GL | 3 | Maps |
+| Supercluster | 8 | Clustering |
 | Prisma | 5 | ORM |
-| PostgreSQL | 16 | База данных |
-| PostGIS | 3.4 | Геоданные |
+| PostgreSQL | 16 | Database |
+| PostGIS | 3.4 | Spatial data |
 
 ---
 
-## 📚 Документация
+## 📦 Scripts
 
-- [ARCHITECTURE.md](docs/ARCHITECTURE.md) — архитектура
-- [API.md](docs/API.md) — спецификация API
-- [CONTRIBUTING.md](docs/CONTRIBUTING.md) — как контрибьютить
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start dev server |
+| `pnpm build` | Production build |
+| `pnpm start` | Start production |
+| `pnpm lint` | Lint code |
+| `pnpm typecheck` | Type check |
+| `pnpm db:generate` | Generate Prisma client |
+| `pnpm db:push` | Push schema to DB |
+| `pnpm db:migrate` | Run migrations |
+| `pnpm db:studio` | Open Prisma Studio |
 
 ---
 
-## 👥 Команда
+## 🔧 Environment Variables
+
+```env
+# Database (PostgreSQL + PostGIS)
+DATABASE_URL="postgresql://user:pass@host:5432/db"
+
+# Mapbox
+NEXT_PUBLIC_MAPBOX_TOKEN="pk.xxx"
+
+# App
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NODE_ENV="development"
+```
+
+---
+
+## 👥 Team
 
 | Role | Name |
 |------|------|
@@ -262,227 +212,6 @@ MIT
 
 ---
 
-**Built with ❤️ for Swiss Real Estate Market**
+**Solar House Price** — *Real Estate Visualization Platform*
 
-*Solar Template v1 — January 2026*
-
-## Solar Rule
-
-All Solar projects MUST start from this template.
-Legacy repositories are reference-only and must not be used as a base.
-
-## Solar Anchor Pattern
-
-`.gitkeep` files represent architectural TODOs.
-They mark locations where functionality is planned but not yet implemented.
-Claude can generate code directly into these folders without further clarification.
-When you see a `.gitkeep` file, it indicates that this part of the architecture is reserved for future development.
-
-🛰 D=>C
-
-# ☀️ SOLAR COMMUNICATION PROTOCOL v3.2
-
-(CANONICAL / ACTIVE)
-
----
-
-## 🚀 Миссия команды Solar
-
-Мы работаем как **единая инженерная система с максимальной автоматизацией, скоростью и контролем.
-
-> Leanid — Architect
-> Dashka — Super Senior / Coordinator / Gatekeeper
-> Claude — Super Engineer / Executor
-
-Мы — суперкоманда, как космический корабль с заправленными баками, строго к цели.
-
----
-
-## 🧭 Роли и ответственность
-
-### 🔴 Leanid — Architect
-
-* определяет стратегию, архитектуру и границы
-* утверждает шаблон, правила и философию
-* подключается только при необходимости:
-
-  * дать отзыв
-  * показать структуру
-  * показать файл
-  * принять ключевое решение
-* не участвует в рутинной переписке
-
----
-
-### 🔵 Dashka — Super Senior / Coordinator
-
-* ставит задачи Claude
-* указывает GitHub-репозиторий
-* указывает Anchor (.gitkeep)
-* контролирует соблюдение Solar Template
-* принимает или отклоняет результат
-* даёт команду GO → GitHub
-
-Dashka — gatekeeper качества и стандартов Solar.
-
----
-
-### 🟢 Claude — Super Engineer / Executor
-
-* реализует задачи строго по инструкции Dashka
-* работает только с GitHub-репозиторием
-* не расширяет структуру самовольно
-* не спорит с архитектурой
-* использует существующие файлы и код
-* отчитывается только Dashka (C=>D)
-
----
-
-## 🔁 Протокол обозначений (ОБЯЗАТЕЛЕН)
-
-| Кратко   | Полно         | Значение                        |
-| -------- | ------------- | ------------------------------- |
-| D=>C | Dashka⇒Claude | Dashka даёт задачу инженеру     |
-| C=>D | Claude⇒Dashka | Claude отчитывается Dashka      |
-| L=>D | Leanid⇒Dashka | Архитектор даёт сигнал Dashka   |
-| D=>L | Dashka⇒Leanid | Dashka докладывает архитектору  |
-| L=>C | Leanid⇒Claude | Архитектор обращается напрямую  |
-| C=>L | Claude⇒Leanid | Claude отчитывается архитектору |
-
-⚠️ Нарушение маркера = нарушение протокола.
-
----
-
-## ⚙️ Принцип автоматизации (ОБЯЗАТЕЛЕН)
-
-### Solar Automation Rule
-
-Каждая задача должна:
-
-1. повышать уровень автоматизации
-2. сокращать время разработки
-3. устранять ручные и повторяющиеся действия
-
-Если решение не ускоряет и не упрощает — оно не принимается.
-
----
-
-## 🧠 GitHub — единый источник истины
-
-### Solar GitHub Rule
-
-* каждый проект имеет отдельный GitHub-репозиторий
-* при получении ссылки на GitHub:
-
-  * доступ считается предоставленным
-  * работа ведётся только с файлами в репозитории
-* даже новый проект:
-
-  * уже содержит структуру
-  * минимум: папка + .gitkeep
-
-❗️ Без GitHub работа не начинается.
-
----
-
-## ❓ Обязательный вопрос Claude
-
-Если при постановке задачи не указана ссылка на GitHub, Claude обязан спросить:
-
-C=>D: Укажите GitHub-репозиторий для этой задачи.
-
----
-
-## 🧱 Архитектурные границы (НЕ ОБСУЖДАЮТСЯ)
-
-* ❌ нельзя создавать новые папки вне шаблона
-
-* ❌ нельзя менять структуру проекта
-
-* ❌ нельзя “улучшать архитектуру” без команды
-
-* ✅ Backend API — app/api/*
-
-* ✅ Frontend — app/ и components/
-
-* ✅ Бизнес-логика — lib/
-
----
-
-## 📍 Solar Anchor Pattern (архитектурный TODO)
-
-.gitkeep означает:
-
-* архитектурная задача поставлена
-* место реализации определено
-* код должен быть реализован именно здесь
-* дополнительных объяснений не требуется
-
-.gitkeep = TODO в структуре проекта.
-
----
-
-## 🔁 Правило повторного использования кода
-
-### Solar Reuse Rule
-
-* ❌ запрещено изобретать новое, если существует старое
-* ❌ запрещено дублировать файлы и логику
-* ✅ сначала анализируются файлы текущего репозитория
-* ✅ при необходимости используется код из предыдущих проектов
-
-Если возможен перенос, Claude обязан спросить:
-
-C=>D: Есть ли аналогичная реализация в предыдущем проекте?
-
----
-
-## 🔁 Рабочий цикл (ФИКСИРОВАН)
-
-Leanid задаёт направление
-        ↓
-Dashka указывает GitHub + Anchor
-        ↓
-Claude реализует
-        ↓
-Claude ⇒ Dashka (C=>D)
-        ↓
-Dashka проверяет
-        ↓
-Dashka: "GO → GitHub"
-        ↓
-Код пушится
-
----
-
-## 🚦 Право на сохранение
-
-* Claude имеет право сохранять и пушить код
-* только после команды Dashka: GO
-* GitHub — единственный источник истины
-
----
-
-## 🧠 Ключевые формулы Solar 
-
-> Нет GitHub — нет задачи
-> Не придумывай — смотри в GitHub
-> Anchor показал место — реализуй
-> Меньше слов — больше структуры
-
----
-
-## 🛰 Статус документа
-
-* Версия: v3.2
-* Статус: ACTIVE
-* Обязателен для всех проектов Solar
-* Обновляется только с разрешения Leanid
-
----
-
-### ✅ ГОТОВО
-
-Скажи — идём дальше 🚀
-
-git commit -m "app/api/house/[id]/.gitkeep"   
+*v1.0.0 — January 2026*
