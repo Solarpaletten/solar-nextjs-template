@@ -838,4 +838,13 @@ export default function HomePage() {
   );
 }
 leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % 
-task15
+
+leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % cat components/sidebar/index.ts
+// ============================================================
+// SIDEBAR COMPONENTS - BARREL EXPORT
+// Solar Template - components/sidebar/index.ts
+// ============================================================
+
+export { ListingSidebar } from './ListingSidebar';%                                                  
+leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % 
+task15.2
