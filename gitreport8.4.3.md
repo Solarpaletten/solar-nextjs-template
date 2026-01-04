@@ -1,58 +1,62 @@
 **C=>D**
 
-## 🔧 Task 7 — Vercel Build Error
+Подключён к GitHub через project_knowledge_search.
 
-**Ошибка:**
-```
-./app/api/clusters/route.ts:129:25
-Type error: Parameter 'house' implicitly has an 'any' type.
-```
+**Анализ:** Вижу что `components/listings/` уже закрыт (ListingCard, ListingList, index.ts существуют).
+
+Но в gitkeep8.4.3.md указан **`app/listings/.gitkeep`** — это PAGE route!
 
 ---
 
-### Fix (Micro-Change Rule):
+## Task 6.5 — app/listings/.gitkeep
 
-**📍 Файл:** `app/api/clusters/route.ts`
-**📍 Строка:** ~129
-**📍 Найти:**
-```typescript
-return houses.map(house => {
+Создаю страницу `/listings`:---
+
+**C=>D**
+
+## ✅ Task 6.5 — app/listings/.gitkeep
+
+### Создано:
+`app/listings/page.tsx` — страница `/listings`
+
+### Функционал:
+- Header с заголовком и кнопкой "View Map"
+- Фильтры (All / For Sale / For Rent)
+- Список объявлений через `<ListingList />`
+- Demo данные (5 listings)
+- Suspense + Loading skeleton
+- SEO metadata
+
+### Структура:
 ```
-**📍 Заменить на:**
-```typescript
-return houses.map((house: any) => {
-```
-
----
-
-**Или добавить интерфейс (лучше):**
-
-**📍 Строка:** ~10 (после imports)
-**📍 Добавить:**
-```typescript
-interface HouseRow {
-  id: string;
-  centroid_lng: number;
-  centroid_lat: number;
-  area_sqm: number | null;
-  building_type: string | null;
-}
-```
-
-**📍 Строка:** ~129
-**📍 Заменить:**
-```typescript
-return houses.map((house: HouseRow) => {
+app/
+├── listings/
+│   └── page.tsx     ← NEW
+├── api/
+│   └── ...
+└── page.tsx
 ```
 
----
-
-### После fix:
+### Commit:
 ```bash
-git add .
-git commit -m "fix: add type to house parameter"
-git push
+git commit -m "feat: add /listings page"
 ```
 
-Vercel пересоберёт автоматически. ✅
+---
 
+### Vercel Status:
+
+После fix TypeScript ошибки и этого файла:
+
+| Anchor | Status |
+|--------|--------|
+| app/api/price/.gitkeep | ✅ |
+| app/api/clusters/.gitkeep | ✅ |
+| components/listings/.gitkeep | ✅ |
+| app/listings/.gitkeep | ✅ NEW |
+
+---
+
+✅ **Task 6.5 закрыт**
+
+Жду task7. 🚀
