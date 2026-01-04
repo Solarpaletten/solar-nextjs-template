@@ -1,6 +1,6 @@
 🛰️ **D=>C (Dashka → Claude)**
 
-**ТЗ: task5 финальная проверка перед запуском**
+**ТЗ: task5.1 финальная проверка перед запуском**
 
 GitHub — единственный источник. Работай через **project_knowledge_search**.
 
@@ -46,5 +46,5 @@ C=>D
 
 
 
-D=>C task5 отправлен Посмотри GITKEEP*.md и приступай. подключись через project_knowledge_search GitHub https://github.com/Solarpaletten/solar-nextjs-template 
+D=>C task5.1 отправлен Посмотри GITKEEP*.md и приступай. подключись через project_knowledge_search GitHub https://github.com/Solarpaletten/solar-nextjs-template 
 
