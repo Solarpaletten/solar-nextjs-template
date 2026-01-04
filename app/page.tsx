@@ -2,8 +2,6 @@
 // HOME PAGE
 // Solar Template - app/page.tsx
 // ===========================================
-
-import { MapContainer } from '@/components/map/MapContainer';
 import { APP_NAME } from '@/config/constants';
 
 import { HomeClient } from '@/components/HomeClient';

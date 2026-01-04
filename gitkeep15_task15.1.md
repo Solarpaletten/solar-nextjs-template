@@ -796,13 +796,12 @@ export function HomeClient() {
     </div>
   );
 }
-leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % cat app/page.tsx
+
+leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % cat ./app/page.tsx
 // ===========================================
 // HOME PAGE
 // Solar Template - app/page.tsx
 // ===========================================
-
-import { MapContainer } from '@/components/map/MapContainer';
 import { APP_NAME } from '@/config/constants';
 
 import { HomeClient } from '@/components/HomeClient';
@@ -839,5 +838,4 @@ export default function HomePage() {
   );
 }
 leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % 
-
 task15
