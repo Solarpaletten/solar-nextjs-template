@@ -106,12 +106,12 @@ async function getCachedEstimate(houseId: string): Promise<PriceEstimate | null>
       where: { houseId },
     });
 
-    if (cached && cached.updatedAt > new Date(Date.now() - 24 * 60 * 60 * 1000)) {
+    if (cached && cached.expiresAt > new Date()) {
       return {
         priceSqm: Number(cached.priceSqm),
-        priceTotal: cached.price ? Number(cached.price) : null,
+        priceTotal: cached.priceTotal ? Number(cached.priceTotal) : null,
         method: 'cached',
-        confidence: cached.confidence === 'high' ? 0.9 : cached.confidence === 'medium' ? 0.7 : 0.5,
+        confidence: Number(cached.confidence),
       };
     }
     return null;
@@ -125,25 +125,30 @@ async function cacheEstimate(houseId: string, estimate: PriceEstimate): Promise<
     const confidence = estimate.confidence >= 0.8 ? 'high' : estimate.confidence >= 0.6 ? 'medium' : 'low';
     const segment = estimate.priceSqm < 6000 ? 'low' : estimate.priceSqm < 8000 ? 'mid' : estimate.priceSqm < 10000 ? 'upper' : 'premium';
 
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
     await prisma.priceEstimate.upsert({
       where: { houseId },
       update: {
-        price: estimate.priceTotal ?? 0,
+        priceTotal: estimate.priceTotal ?? 0,
         priceSqm: estimate.priceSqm,
-        segment,
-        confidence,
+        method: estimate.method,
+        confidence: estimate.confidence,
+        expiresAt,
       },
       create: {
         houseId,
-        price: estimate.priceTotal ?? 0,
+        priceTotal: estimate.priceTotal ?? 0,
         priceSqm: estimate.priceSqm,
-        segment,
-        confidence,
+        method: estimate.method,
+        confidence: estimate.confidence,
+        expiresAt,
       },
     });
-  } catch {
-    console.warn('Could not cache price estimate');
-  }
+  });
+} catch {
+  console.warn('Could not cache price estimate');
+}
 }
 
 // ============================================================
