@@ -76,6 +76,16 @@ export function MapContainer({ className = '' }: MapContainerProps) {
     flyTo({ lat: lat - 0.003, lng }, viewport.zoom + 2);
     setSelectedCluster(null);
   }, [flyTo, viewport.zoom]);
+
+  // Handle point click
+
+  function handlePointClick(feature: ClusterFeature) {
+    const houseId = feature.properties.listing_id;
+    if (houseId) {
+      // For MVP: just log, Phase 2: router.push
+      console.log('Point clicked:', houseId);
+    }
+  }
   
   return (
     <div className={`relative w-full h-full ${className}`}>
