@@ -121,6 +121,8 @@ export function HomeClient() {
     if (!bbox) return;
 
     const controller = new AbortController();
+    // Capture bbox in closure to satisfy TypeScript
+    const currentBbox = bbox;
 
     async function fetchHouses() {
       setLoading(true);
@@ -128,7 +130,7 @@ export function HomeClient() {
 
       try {
         const response = await fetch(
-          `/api/houses?bbox=${bboxToString(bbox)}&limit=500`,
+          `/api/houses?bbox=${bboxToString(currentBbox)}&limit=500`,
           { signal: controller.signal }
         );
 

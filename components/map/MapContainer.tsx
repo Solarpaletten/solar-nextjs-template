@@ -74,7 +74,8 @@ export function MapContainer({
       return;
     }
 
-    const visibleIds = extractVisibleHouseIds(clusters);
+    // Cast to any to avoid type conflicts between different ClusterFeature definitions
+    const visibleIds = extractVisibleHouseIds(clusters as any);
     onVisibleHouseIdsChange?.(visibleIds);
   }, [clusters, onVisibleHouseIdsChange]);
 

@@ -107,8 +107,8 @@ export function ClusterLayer({
         // Individual point marker
         const houseId = getHouseId(feature);
         const color = getSegmentColor(feature.properties.price_sqm || 7000);
-        const isSelected = houseId && houseId === selectedId;
-        const isHovered = houseId && houseId === hoveredId;
+        const isSelected = Boolean(houseId && houseId === selectedId);
+        const isHovered = Boolean(houseId && houseId === hoveredId);
 
         el.className = 'point-marker';
         el.setAttribute('data-house-id', houseId || '');
