@@ -8,6 +8,7 @@
 import { Suspense } from 'react';
 import { ListingList } from '@/components/listings';
 
+
 // ============================================================
 // METADATA
 // ============================================================

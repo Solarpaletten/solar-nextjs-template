@@ -6,6 +6,9 @@
 import { MapContainer } from '@/components/map/MapContainer';
 import { APP_NAME } from '@/config/constants';
 
+import { HomeClient } from '@/components/HomeClient';
+
+
 // ===========================================
 // PAGE
 // ===========================================
@@ -31,7 +34,7 @@ export default function HomePage() {
       
       {/* Map */}
       <div className="flex-1 relative">
-        <MapContainer />
+        <HomeClient />
       </div>
     </main>
   );
