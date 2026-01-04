@@ -2,7 +2,7 @@
 // DATABASE CLIENT
 // Solar Template - lib/db.ts
 // ===========================================
-
+import 'server-only';
 import { PrismaClient } from '@prisma/client';
 
 // Prevent multiple instances in development
