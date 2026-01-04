@@ -1,168 +1,339 @@
-leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % cat app/listings/page.tsx
-// ============================================================
-// LISTINGS PAGE
-// Solar Template - app/listings/page.tsx
-// ============================================================
-// Commit marker: app/listings/.gitkeep
-// ============================================================
+leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % cat components/map/ClusterLayer.tsx
+// ===========================================
+// CLUSTER LAYER
+// Solar Template - components/map/ClusterLayer.tsx
+// ===========================================
+// TASK 12: Phase 1 - Added highlight support for sidebar sync
+// ===========================================
 
-import { Suspense } from 'react';
-import { ListingList } from '@/components/listings';
+'use client';
 
+import { useEffect, useRef } from 'react';
+import mapboxgl from 'mapbox-gl';
+import type { ClusterFeature } from '@/types/map';
 
-// ============================================================
-// METADATA
-// ============================================================
+// ===========================================
+// TYPES
+// ===========================================
 
-export const metadata = {
-  title: 'Listings | Solar House Price',
-  description: 'Browse real estate listings',
-};
-
-// ============================================================
-// DATA FETCHING
-// ============================================================
-
-async function getListings() {
-  // Demo listings data
-  return [
-    {
-      id: '1',
-      type: 'sale' as const,
-      price: 450000,
-      address: 'Alexanderplatz 1, Berlin',
-      rooms: 3,
-      areaSqm: 85,
-      buildingType: 'apartment',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      type: 'rent' as const,
-      price: 1800,
-      address: 'Friedrichstraße 42, Berlin',
-      rooms: 2,
-      areaSqm: 65,
-      buildingType: 'apartment',
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      id: '3',
-      type: 'sale' as const,
-      price: 720000,
-      address: 'Prenzlauer Allee 88, Berlin',
-      rooms: 4,
-      areaSqm: 120,
-      buildingType: 'house',
-      createdAt: new Date(Date.now() - 172800000).toISOString(),
-    },
-    {
-      id: '4',
-      type: 'rent' as const,
-      price: 2200,
-      address: 'Kurfürstendamm 15, Berlin',
-      rooms: 3,
-      areaSqm: 90,
-      buildingType: 'apartment',
-      createdAt: new Date(Date.now() - 259200000).toISOString(),
-    },
-    {
-      id: '5',
-      type: 'sale' as const,
-      price: 380000,
-      address: 'Karl-Marx-Allee 33, Berlin',
-      rooms: 2,
-      areaSqm: 55,
-      buildingType: 'apartment',
-      createdAt: new Date(Date.now() - 345600000).toISOString(),
-    },
-  ];
+interface ClusterLayerProps {
+  map: mapboxgl.Map;
+  clusters: ClusterFeature[];
+  onClusterClick?: (feature: ClusterFeature) => void;
+  onPointClick?: (feature: ClusterFeature) => void;
+  onPointHover?: (feature: ClusterFeature) => void;
+  onPointLeave?: () => void;
+  selectedId?: string | null;
+  hoveredId?: string | null;
 }
 
-// ============================================================
-// LOADING
-// ============================================================
+// ===========================================
+// HELPERS
+// ===========================================
 
-function ListingsLoading() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {[1, 2, 3, 4, 5, 6].map((i) => (
-        <div key={i} className="bg-white rounded-xl border border-gray-200 overflow-hidden animate-pulse">
-          <div className="h-40 bg-gray-200" />
-          <div className="p-4 space-y-3">
-            <div className="h-6 bg-gray-200 rounded w-1/2" />
-            <div className="h-4 bg-gray-200 rounded w-3/4" />
-            <div className="flex gap-4">
-              <div className="h-4 bg-gray-200 rounded w-16" />
-              <div className="h-4 bg-gray-200 rounded w-16" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+function getSegmentColor(priceSqm: number): string {
+  if (priceSqm < 6000) return '#22c55e'; // green - low
+  if (priceSqm < 8000) return '#3b82f6'; // blue - mid
+  if (priceSqm < 10000) return '#f97316'; // orange - upper
+  return '#ef4444'; // red - premium
+}
+
+function getClusterSize(count: number): number {
+  if (count < 5) return 36;
+  if (count < 20) return 44;
+  if (count < 50) return 52;
+  if (count < 100) return 60;
+  return 68;
+}
+
+// ===========================================
+// COMPONENT
+// ===========================================
+
+export function ClusterLayer({
+  map,
+  clusters,
+  onClusterClick,
+  onPointClick,
+  onPointHover,
+  onPointLeave,
+  selectedId,
+  hoveredId,
+}: ClusterLayerProps) {
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
+
+  useEffect(() => {
+    // Clear existing markers
+    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current = [];
+
+    // Add new markers
+    clusters.forEach((feature) => {
+      const [lng, lat] = feature.geometry.coordinates;
+      const el = document.createElement('div');
+
+      if (feature.properties.cluster) {
+        // Cluster marker
+        const count = feature.properties.point_count || 0;
+        const size = getClusterSize(count);
+
+        el.className = 'cluster-marker';
+        el.style.cssText = `
+          width: ${size}px;
+          height: ${size}px;
+          background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+          border: 3px solid white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: ${count > 99 ? '14px' : '16px'};
+          cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        `;
+        el.textContent = feature.properties.point_count_abbreviated || String(count);
+
+        el.addEventListener('mouseenter', () => {
+          el.style.transform = 'scale(1.1)';
+          el.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4)';
+        });
+        el.addEventListener('mouseleave', () => {
+          el.style.transform = 'scale(1)';
+          el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+        });
+        el.addEventListener('click', () => {
+          onClusterClick?.(feature);
+        });
+      } else {
+        // Individual point marker
+        const listingId = feature.properties.listing_id;
+        const color = getSegmentColor(feature.properties.price_sqm || 7000);
+        const isSelected = selectedId === listingId;
+        const isHovered = hoveredId === listingId;
+        const isHighlighted = isSelected || isHovered;
+
+        el.className = 'point-marker';
+        el.setAttribute('data-listing-id', listingId || '');
+        el.style.cssText = `
+          width: ${isHighlighted ? '24px' : '16px'};
+          height: ${isHighlighted ? '24px' : '16px'};
+          background-color: ${color};
+          border: ${isHighlighted ? '3px' : '2px'} solid ${isSelected ? '#2563eb' : 'white'};
+          border-radius: 50%;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: ${isHighlighted ? '0 2px 8px rgba(0,0,0,0.4)' : '0 1px 4px rgba(0,0,0,0.3)'};
+          z-index: ${isHighlighted ? '100' : '1'};
+        `;
+
+        el.addEventListener('mouseenter', () => {
+          if (!isHighlighted) {
+            el.style.transform = 'scale(1.25)';
+          }
+          onPointHover?.(feature);
+        });
+        el.addEventListener('mouseleave', () => {
+          if (!isHighlighted) {
+            el.style.transform = 'scale(1)';
+          }
+          onPointLeave?.();
+        });
+        el.addEventListener('click', () => {
+          onPointClick?.(feature);
+        });
+      }
+
+      // Create and add marker
+      const marker = new mapboxgl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
+
+      markersRef.current.push(marker);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      markersRef.current.forEach((marker) => marker.remove());
+      markersRef.current = [];
+    };
+  }, [map, clusters, onClusterClick, onPointClick, onPointHover, onPointLeave, selectedId, hoveredId]);
+
+  return null;
+}
+leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % cat components/map/MapContainer.tsx
+// ===========================================
+// MAP CONTAINER
+// Solar Template - components/map/MapContainer.tsx
+// ===========================================
+// TASK 12: Phase 1 - Added sync props for sidebar integration
+// ===========================================
+
+'use client';
+
+import { useCallback, useState, useEffect } from 'react';
+import { useMapbox } from '@/hooks/useMapbox';
+import { useClusters } from '@/hooks/useClusters';
+import { ClusterLayer } from '@/components/map/ClusterLayer';
+import { Legend } from '@/components/map/Legend';
+import { SegmentPopup } from '@/components/map/SegmentPopup';
+import type { Point, BoundingBox, MapViewport, ClusterFeature } from '@/types/map';
+import type { SegmentsResponse } from '@/types/api';
+
+// ===========================================
+// TYPES
+// ===========================================
+
+interface MapContainerProps {
+  className?: string;
+  // Sync props (Phase 1)
+  onBboxChange?: (bbox: BoundingBox) => void;
+  onPointSelect?: (id: string) => void;
+  onPointHover?: (id: string | null) => void;
+  selectedId?: string | null;
+  hoveredId?: string | null;
+}
+
+// ===========================================
+// COMPONENT
+// ===========================================
+
+export function MapContainer({
+  className = '',
+  onBboxChange,
+  onPointSelect,
+  onPointHover,
+  selectedId,
+  hoveredId,
+}: MapContainerProps) {
+  const [selectedCluster, setSelectedCluster] = useState<{
+    feature: ClusterFeature;
+    segments: SegmentsResponse | null;
+  } | null>(null);
+
+  // Map hook
+  const { map, isLoaded, viewport, bbox, flyTo } = useMapbox({
+    container: 'map',
+    onMove: handleMapMove,
+    onClick: handleMapClick,
+  });
+
+  // Clusters hook
+  const { clusters, isLoading, getSegments } = useClusters({
+    bbox,
+    zoom: viewport.zoom,
+    enabled: isLoaded,
+  });
+
+  // Notify parent of bbox changes
+  useEffect(() => {
+    if (bbox && onBboxChange) {
+      onBboxChange(bbox);
+    }
+  }, [bbox, onBboxChange]);
+
+  // Handle map move
+  function handleMapMove(newViewport: MapViewport, newBbox: BoundingBox) {
+    // Don't auto-close popup on small movements
+    // Bbox change handled via useEffect
+  }
+
+  // Handle map click
+  async function handleMapClick(point: Point, features: any[]) {
+    // Find cluster feature
+    const clusterFeature = features.find((f) => f.properties?.cluster);
+
+    if (clusterFeature) {
+      const clusterId = clusterFeature.properties.cluster_id;
+      const segments = await getSegments(clusterId);
+
+      setSelectedCluster({
+        feature: clusterFeature as ClusterFeature,
+        segments,
+      });
+    } else {
+      setSelectedCluster(null);
+    }
+  }
+
+  // Handle zoom to cluster
+  const handleZoomIn = useCallback(
+    (feature: ClusterFeature) => {
+      const [lng, lat] = feature.geometry.coordinates;
+      // Offset lat вниз чтобы popup был виден сверху
+      flyTo({ lat: lat - 0.003, lng }, viewport.zoom + 2);
+      setSelectedCluster(null);
+    },
+    [flyTo, viewport.zoom]
   );
-}
 
-// ============================================================
-// PAGE COMPONENT
-// ============================================================
+  // Handle point click (sync with sidebar)
+  function handlePointClick(feature: ClusterFeature) {
+    const houseId = feature.properties.listing_id;
+    if (houseId) {
+      console.log('Point clicked:', houseId);
+      onPointSelect?.(houseId);
+    }
+  }
 
-export default async function ListingsPage() {
-  const listings = await getListings();
+  // Handle point hover (sync with sidebar)
+  function handlePointMouseEnter(feature: ClusterFeature) {
+    const houseId = feature.properties.listing_id;
+    if (houseId) {
+      onPointHover?.(houseId);
+    }
+  }
+
+  function handlePointMouseLeave() {
+    onPointHover?.(null);
+  }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Listings
-              </h1>
-              <p className="mt-1 text-sm text-gray-500">
-                {listings.length} properties available
-              </p>
-            </div>
-            
-            {/* Back to map */}
-            <a
-              href="/"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-              </svg>
-              View Map
-            </a>
+    <div className={`relative w-full h-full ${className}`}>
+      {/* Map container */}
+      <div id="map" className="w-full h-full" />
+
+      {/* Cluster layer */}
+      {isLoaded && map && (
+        <ClusterLayer
+          map={map}
+          clusters={clusters}
+          onClusterClick={(feature) => {
+            // Handle via map click
+          }}
+          onPointClick={handlePointClick}
+          onPointHover={handlePointMouseEnter}
+          onPointLeave={handlePointMouseLeave}
+          selectedId={selectedId}
+          hoveredId={hoveredId}
+        />
+      )}
+
+      {/* Legend */}
+      <Legend />
+
+      {/* Segment popup */}
+      {selectedCluster && selectedCluster.segments && (
+        <SegmentPopup
+          segments={selectedCluster.segments}
+          position={{
+            lat: selectedCluster.feature.geometry.coordinates[1],
+            lng: selectedCluster.feature.geometry.coordinates[0],
+          }}
+          onClose={() => setSelectedCluster(null)}
+          onZoomIn={() => handleZoomIn(selectedCluster.feature)}
+        />
+      )}
+
+      {/* Loading indicator */}
+      {isLoading && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+          <div className="bg-white/90 px-4 py-2 rounded-full shadow-lg">
+            <span className="text-sm text-gray-600">Loading...</span>
           </div>
         </div>
-      </header>
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Filters (placeholder) */}
-        <div className="mb-6 flex flex-wrap gap-3">
-          <button className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium">
-            All
-          </button>
-          <button className="px-4 py-2 rounded-full bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200">
-            For Sale
-          </button>
-          <button className="px-4 py-2 rounded-full bg-gray-100 text-gray-600 text-sm font-medium hover:bg-gray-200">
-            For Rent
-          </button>
-        </div>
-
-        {/* Listings grid */}
-        <Suspense fallback={<ListingsLoading />}>
-          <ListingList 
-            listings={listings}
-            layout="grid"
-          />
-        </Suspense>
-      </div>
-    </main>
+      )}
+    </div>
   );
 }
 leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % cat components/sidebar/ListingSidebar.tsx
@@ -625,279 +796,48 @@ export function HomeClient() {
     </div>
   );
 }
-leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % 
-
-
-
-
-
-
- и у нас есть файлы 
-
- Напиши инструкцию что мы меняем в этих файлах у нас есть вот эти файлы 
-
-leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % cat components/map/ClusterLayer.tsx
+leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % cat app/page.tsx
 // ===========================================
-// CLUSTER LAYER
-// Solar Template - components/map/ClusterLayer.tsx
+// HOME PAGE
+// Solar Template - app/page.tsx
 // ===========================================
 
-'use client';
+import { MapContainer } from '@/components/map/MapContainer';
+import { APP_NAME } from '@/config/constants';
 
-import { useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import type { ClusterFeature } from '@/types/map';
-import { getClusterStyle, formatCount } from '@/lib/clustering';
-import { getSegmentColor } from '@/lib/segmentation';
+import { HomeClient } from '@/components/HomeClient';
+
 
 // ===========================================
-// TYPES
+// PAGE
 // ===========================================
 
-interface ClusterLayerProps {
-  map: mapboxgl.Map;
-  clusters: ClusterFeature[];
-  onClusterClick?: (feature: ClusterFeature) => void;
-  onPointClick?: (feature: ClusterFeature) => void;
-}
-
-// ===========================================
-// COMPONENT
-// ===========================================
-
-export function ClusterLayer({
-  map,
-  clusters,
-  onClusterClick,
-  onPointClick,
-}: ClusterLayerProps) {
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
-  
-  // Update markers when clusters change
-  useEffect(() => {
-    // Clear existing markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
-    
-    // Add new markers
-    clusters.forEach(feature => {
-      const [lng, lat] = feature.geometry.coordinates;
-      const isCluster = feature.properties.cluster;
-      
-      // Create marker element
-      const el = document.createElement('div');
-      
-      if (isCluster) {
-        // Cluster marker
-        const count = feature.properties.point_count || 0;
-        const style = getClusterStyle(count);
-        
-        el.className = 'cluster-marker';
-        el.innerHTML = formatCount(count);
-        el.style.cssText = `
-          width: ${style.size}px;
-          height: ${style.size}px;
-          background-color: ${style.backgroundColor};
-          border: 3px solid ${style.borderColor};
-          border-radius: 50%;
-          color: ${style.textColor};
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: bold;
-          font-size: ${style.size > 50 ? '16px' : '14px'};
-          cursor: pointer;
-          transition: transform 0.2s;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        `;
-        
-        el.addEventListener('mouseenter', () => {
-          el.style.transform = 'scale(1.1)';
-        });
-        el.addEventListener('mouseleave', () => {
-          el.style.transform = 'scale(1)';
-        });
-        el.addEventListener('click', () => {
-          onClusterClick?.(feature);
-        });
-      } else {
-        // Individual point marker
-        const segment = feature.properties.segment || 'mid';
-        const color = getSegmentColor(feature.properties.price_sqm || 7000);
-        
-        el.className = 'point-marker';
-        el.style.cssText = `
-          width: 16px;
-          height: 16px;
-          background-color: ${color};
-          border: 2px solid white;
-          border-radius: 50%;
-          cursor: pointer;
-          transition: transform 0.2s;
-          box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-        `;
-        
-        el.addEventListener('mouseenter', () => {
-          el.style.transform = 'scale(1.25)';
-        });
-        el.addEventListener('mouseleave', () => {
-          el.style.transform = 'scale(1)';
-        });
-        el.addEventListener('click', () => {
-          onPointClick?.(feature);
-        });
-      }
-      
-      // Create and add marker
-      const marker = new mapboxgl.Marker({ element: el })
-        .setLngLat([lng, lat])
-        .addTo(map);
-      
-      markersRef.current.push(marker);
-    });
-    
-    // Cleanup on unmount
-    return () => {
-      markersRef.current.forEach(marker => marker.remove());
-      markersRef.current = [];
-    };
-  }, [map, clusters, onClusterClick, onPointClick]);
-  
-  return null;
-}
-leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % cat components/map/MapContainer.tsx
-// ===========================================
-// MAP CONTAINER
-// Solar Template - components/map/MapContainer.tsx
-// ===========================================
-
-'use client';
-
-import { useCallback, useState } from 'react';
-import { useMapbox } from '@/hooks/useMapbox';
-import { useClusters } from '@/hooks/useClusters';
-import { ClusterLayer } from '@/components/map/ClusterLayer';
-import { Legend } from '@/components/map/Legend';
-import { SegmentPopup } from '@/components/map/SegmentPopup';
-import type { Point, BoundingBox, MapViewport, ClusterFeature } from '@/types/map';
-import type { SegmentsResponse } from '@/types/api';
-
-// ===========================================
-// TYPES
-// ===========================================
-
-interface MapContainerProps {
-  className?: string;
-}
-
-// ===========================================
-// COMPONENT
-// ===========================================
-
-export function MapContainer({ className = '' }: MapContainerProps) {
-  const [selectedCluster, setSelectedCluster] = useState<{
-    feature: ClusterFeature;
-    segments: SegmentsResponse | null;
-  } | null>(null);
-  
-  // Map hook
-  const { map, isLoaded, viewport, bbox, flyTo } = useMapbox({
-    container: 'map',
-    onMove: handleMapMove,
-    onClick: handleMapClick,
-  });
-  
-  // Clusters hook
-  const { clusters, isLoading, getSegments } = useClusters({
-    bbox,
-    zoom: viewport.zoom,
-    enabled: isLoaded,
-  });
-  
-  // Handle map move
-  function handleMapMove(newViewport: MapViewport, newBbox: BoundingBox) {
-    // Don't auto-close popup on small movements
-    // User closes manually or clicks elsewhere
-  }
-  
-  // Handle map click
-  async function handleMapClick(point: Point, features: any[]) {
-    // Find cluster feature
-    const clusterFeature = features.find(f => f.properties?.cluster);
-    
-    if (clusterFeature) {
-      const clusterId = clusterFeature.properties.cluster_id;
-      const segments = await getSegments(clusterId);
-      
-      setSelectedCluster({
-        feature: clusterFeature as ClusterFeature,
-        segments,
-      });
-    } else {
-      setSelectedCluster(null);
-    }
-  }
-
-  // Handle zoom to cluster
-  const handleZoomIn = useCallback((feature: ClusterFeature) => {
-    const [lng, lat] = feature.geometry.coordinates;
-    flyTo({ lat: lat - 0.003, lng }, viewport.zoom + 2);
-    setSelectedCluster(null);
-  }, [flyTo, viewport.zoom]);
-
-  // Handle point click
-
-  function handlePointClick(feature: ClusterFeature) {
-    const houseId = feature.properties.listing_id;
-    if (houseId) {
-      // For MVP: just log, Phase 2: router.push
-      console.log('Point clicked:', houseId);
-    }
-  }
-  
+export default function HomePage() {
   return (
-    <div className={`relative w-full h-full ${className}`}>
-      {/* Map container */}
-      <div id="map" className="w-full h-full" />
-      
-      {/* Cluster layer */}
-      {isLoaded && map && (
-        <ClusterLayer
-          map={map}
-          clusters={clusters}
-          onClusterClick={(feature) => {
-            // Handle via map click
-          }}
-          onPointClick={handlePointClick}  // ← ADD THIS
-        />
-      )}
-      
-      {/* Legend */}
-      <Legend />
-      
-      {/* Segment popup */}
-      {selectedCluster && selectedCluster.segments && (
-        <SegmentPopup
-          segments={selectedCluster.segments}
-          position={{
-            lat: selectedCluster.feature.geometry.coordinates[1],
-            lng: selectedCluster.feature.geometry.coordinates[0],
-          }}
-          onClose={() => setSelectedCluster(null)}
-          onZoomIn={() => handleZoomIn(selectedCluster.feature)}
-        />
-      )}
-      
-      {/* Loading indicator */}
-      {isLoading && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
-          <div className="bg-white/90 px-4 py-2 rounded-full shadow-lg">
-            <span className="text-sm text-gray-600">Loading...</span>
+    <main className="h-screen flex flex-col">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {/* Logo */}
+          <div className="w-8 h-8 bg-solar-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-sm">S</span>
           </div>
+          <h1 className="font-semibold text-gray-900">{APP_NAME}</h1>
         </div>
-      )}
-    </div>
+        
+        {/* Region selector (future) */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">Valais, Switzerland</span>
+        </div>
+      </header>
+      
+      {/* Map */}
+      <div className="flex-1 relative">
+        <HomeClient />
+      </div>
+    </main>
   );
 }
 leanid@MacBook-Pro-LeanidHamburg solar-nextjs-template % 
-task14
+
+task15
