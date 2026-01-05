@@ -2,12 +2,11 @@
 // LISTINGS PAGE
 // Solar Template - app/listings/page.tsx
 // ============================================================
-// Commit marker: app/listings/.gitkeep
+// TASK 14: Switzerland Only - Monthey addresses
 // ============================================================
 
 import { Suspense } from 'react';
 import { ListingList } from '@/components/listings';
-
 
 // ============================================================
 // METADATA
@@ -15,7 +14,7 @@ import { ListingList } from '@/components/listings';
 
 export const metadata = {
   title: 'Listings | Solar House Price',
-  description: 'Browse real estate listings',
+  description: 'Browse real estate listings in Monthey, Switzerland',
 };
 
 // ============================================================
@@ -23,55 +22,55 @@ export const metadata = {
 // ============================================================
 
 async function getListings() {
-  // Demo listings data
+  // Demo listings data - Monthey, Valais, Switzerland
   return [
     {
       id: '1',
       type: 'sale' as const,
-      price: 450000,
-      address: 'Alexanderplatz 1, Berlin',
-      rooms: 3,
-      areaSqm: 85,
+      price: 650000,
+      address: 'Avenue de la Gare 15, Monthey',
+      rooms: 4,
+      areaSqm: 95,
       buildingType: 'apartment',
       createdAt: new Date().toISOString(),
     },
     {
       id: '2',
       type: 'rent' as const,
-      price: 1800,
-      address: 'Friedrichstraße 42, Berlin',
-      rooms: 2,
-      areaSqm: 65,
+      price: 1850,
+      address: 'Rue du Commerce 8, Monthey',
+      rooms: 3,
+      areaSqm: 75,
       buildingType: 'apartment',
       createdAt: new Date(Date.now() - 86400000).toISOString(),
     },
     {
       id: '3',
       type: 'sale' as const,
-      price: 720000,
-      address: 'Prenzlauer Allee 88, Berlin',
-      rooms: 4,
-      areaSqm: 120,
+      price: 890000,
+      address: 'Chemin des Vignes 22, Monthey',
+      rooms: 5,
+      areaSqm: 140,
       buildingType: 'house',
       createdAt: new Date(Date.now() - 172800000).toISOString(),
     },
     {
       id: '4',
       type: 'rent' as const,
-      price: 2200,
-      address: 'Kurfürstendamm 15, Berlin',
-      rooms: 3,
-      areaSqm: 90,
+      price: 2400,
+      address: 'Place Centrale 3, Monthey',
+      rooms: 4,
+      areaSqm: 100,
       buildingType: 'apartment',
       createdAt: new Date(Date.now() - 259200000).toISOString(),
     },
     {
       id: '5',
       type: 'sale' as const,
-      price: 380000,
-      address: 'Karl-Marx-Allee 33, Berlin',
-      rooms: 2,
-      areaSqm: 55,
+      price: 520000,
+      address: 'Rue du Château 11, Monthey',
+      rooms: 3,
+      areaSqm: 70,
       buildingType: 'apartment',
       createdAt: new Date(Date.now() - 345600000).toISOString(),
     },
@@ -120,7 +119,7 @@ export default async function ListingsPage() {
                 Listings
               </h1>
               <p className="mt-1 text-sm text-gray-500">
-                {listings.length} properties available
+                {listings.length} properties in Monthey, Valais
               </p>
             </div>
             
